@@ -13,6 +13,7 @@
 - Initialize Flutter and develop offline conversation management with SQLite and Bloc.
 - Implement the remaining provider, persistence, chat, and bonus requirements. Verify each milestone and document the engineering trade-offs.
 - Recheck the implementation against the assessment and fix gaps in Gemini credential feedback and chat progress indicators.
+- Move startup retry, provider editing, and composer state to Bloc.
 
 ## Generated code
 

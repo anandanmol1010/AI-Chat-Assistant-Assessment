@@ -49,6 +49,10 @@ void main() {
     await tester.pumpAndSettle();
 
     final input = find.byType(TextField);
+    final editable = find.descendant(
+      of: input,
+      matching: find.byType(EditableText),
+    );
     final send = find.byWidgetPredicate(
       (widget) => widget is IconButton && widget.tooltip == 'Send message',
     );
@@ -58,7 +62,7 @@ void main() {
     await tester.tap(send);
     await tester.pump();
     expect(
-      tester.widget<TextField>(input).controller!.text,
+      tester.widget<EditableText>(editable).controller.text,
       'First line\nSecond line',
     );
     expect(tester.widget<IconButton>(send).onPressed, isNull);
@@ -67,7 +71,7 @@ void main() {
     store.pending.complete(const Left(StorageFailure()));
     await tester.pumpAndSettle();
     expect(
-      tester.widget<TextField>(input).controller!.text,
+      tester.widget<EditableText>(editable).controller.text,
       'First line\nSecond line',
     );
     expect(
@@ -80,7 +84,7 @@ void main() {
     await tester.pump();
     store.pending.complete(const Right(unit));
     await tester.pump();
-    expect(tester.widget<TextField>(input).controller!.text, isEmpty);
+    expect(tester.widget<EditableText>(editable).controller.text, isEmpty);
     expect(find.text('Assistant is typing…'), findsOneWidget);
     remote.events.add(const Right('**Done**'));
     await tester.pump();
@@ -93,6 +97,7 @@ void main() {
       '**Done**',
     );
     expect(find.byType(LinearProgressIndicator), findsNothing);
+    expect(tester.widget<IconButton>(send).onPressed, isNull);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
     unawaited(bloc.close());

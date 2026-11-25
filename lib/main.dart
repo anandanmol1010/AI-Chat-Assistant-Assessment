@@ -1,3 +1,4 @@
+import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -36,6 +37,29 @@ Future<_Repositories> _openRepositories() async {
   );
 }
 
+final class _StartupRequested {
+  const _StartupRequested();
+}
+
+class _StartupBloc
+    extends Bloc<_StartupRequested, AsyncSnapshot<_Repositories>> {
+  _StartupBloc() : super(const AsyncSnapshot.waiting()) {
+    on<_StartupRequested>((event, emit) async {
+      emit(const AsyncSnapshot.waiting());
+      try {
+        emit(
+          AsyncSnapshot.withData(
+            ConnectionState.done,
+            await _openRepositories(),
+          ),
+        );
+      } catch (error, stack) {
+        emit(AsyncSnapshot.withError(ConnectionState.done, error, stack));
+      }
+    }, transformer: droppable());
+  }
+}
+
 class AiChatAssistantApp extends StatelessWidget {
   const AiChatAssistantApp({super.key});
 
@@ -43,7 +67,10 @@ class AiChatAssistantApp extends StatelessWidget {
   Widget build(BuildContext context) => MaterialApp(
     title: 'AI Chat Assistant',
     theme: ThemeData(colorSchemeSeed: const Color(0xFF206B54)),
-    home: const _HistoryStartup(),
+    home: BlocProvider(
+      create: (_) => _StartupBloc()..add(const _StartupRequested()),
+      child: const _HistoryStartup(),
+    ),
   );
 }
 
@@ -55,7 +82,6 @@ class _HistoryStartup extends StatefulWidget {
 }
 
 class _HistoryStartupState extends State<_HistoryStartup> {
-  late var _history = _openRepositories();
   final _dio = Dio(
     BaseOptions(
       connectTimeout: const Duration(seconds: 15),
@@ -71,65 +97,66 @@ class _HistoryStartupState extends State<_HistoryStartup> {
   }
 
   @override
-  Widget build(BuildContext context) => FutureBuilder<_Repositories>(
-    future: _history,
-    builder: (context, snapshot) {
-      final repositories = snapshot.data;
-      if (snapshot.connectionState == ConnectionState.done &&
-          repositories != null) {
-        final repository = repositories.history;
-        final loadProvider = LoadProvider(repositories.settings);
-        Widget settingsBuilder(BuildContext context) => BlocProvider(
-          create: (_) => SettingsBloc(
-            load: loadProvider,
-            save: SaveProvider(repositories.settings),
-          ),
-          child: const SettingsScreen(),
-        );
-        return BlocProvider(
-          create: (_) => ConversationBloc(
-            list: GetConversations(repository),
-            create: CreateConversation(repository),
-            find: GetConversation(repository),
-            delete: DeleteConversation(repository),
-          )..add(const ConversationsRequested()),
-          child: ConversationsScreen(
-            settingsBuilder: settingsBuilder,
-            chatBuilder: (conversation) => BlocProvider(
-              create: (_) => ChatBloc(
-                conversationId: conversation.id,
-                getMessages: GetMessages(repository),
-                saveMessage: SaveMessage(repository),
-                generateReply: GenerateReply(
-                  RemoteChatRepository(_dio, loadProvider),
-                ),
-              )..add(const ChatOpened()),
-              child: ChatScreen(
-                conversation: conversation,
+  Widget build(BuildContext context) =>
+      BlocBuilder<_StartupBloc, AsyncSnapshot<_Repositories>>(
+        builder: (context, snapshot) {
+          final repositories = snapshot.data;
+          if (snapshot.connectionState == ConnectionState.done &&
+              repositories != null) {
+            final repository = repositories.history;
+            final loadProvider = LoadProvider(repositories.settings);
+            Widget settingsBuilder(BuildContext context) => BlocProvider(
+              create: (_) => SettingsBloc(
+                load: loadProvider,
+                save: SaveProvider(repositories.settings),
+              )..add(const SettingsRequested()),
+              child: const SettingsScreen(),
+            );
+            return BlocProvider(
+              create: (_) => ConversationBloc(
+                list: GetConversations(repository),
+                create: CreateConversation(repository),
+                find: GetConversation(repository),
+                delete: DeleteConversation(repository),
+              )..add(const ConversationsRequested()),
+              child: ConversationsScreen(
                 settingsBuilder: settingsBuilder,
-              ),
-            ),
-          ),
-        );
-      }
-      return Scaffold(
-        appBar: AppBar(title: const Text('AI Chat Assistant')),
-        body: Center(
-          child: snapshot.hasError
-              ? Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text('Could not open local storage.'),
-                    TextButton(
-                      onPressed: () =>
-                          setState(() => _history = _openRepositories()),
-                      child: const Text('Retry'),
+                chatBuilder: (conversation) => BlocProvider(
+                  create: (_) => ChatBloc(
+                    conversationId: conversation.id,
+                    getMessages: GetMessages(repository),
+                    saveMessage: SaveMessage(repository),
+                    generateReply: GenerateReply(
+                      RemoteChatRepository(_dio, loadProvider),
                     ),
-                  ],
-                )
-              : const CircularProgressIndicator(),
-        ),
+                  )..add(const ChatOpened()),
+                  child: ChatScreen(
+                    conversation: conversation,
+                    settingsBuilder: settingsBuilder,
+                  ),
+                ),
+              ),
+            );
+          }
+          return Scaffold(
+            appBar: AppBar(title: const Text('AI Chat Assistant')),
+            body: Center(
+              child: snapshot.hasError
+                  ? Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('Could not open local storage.'),
+                        TextButton(
+                          onPressed: () => context.read<_StartupBloc>().add(
+                            const _StartupRequested(),
+                          ),
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    )
+                  : const CircularProgressIndicator(),
+            ),
+          );
+        },
       );
-    },
-  );
 }

@@ -76,9 +76,9 @@ Details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Reasons behind choices: [
 |---|---|---|---|
 | `ConversationBloc` | list, create, delete, open conversations | `ConversationsRequested`, `ConversationCreated`, `ConversationOpened`, `ConversationDeleted` | `ConversationLoading`, `ConversationLoaded`, `ConversationEmpty`, `ConversationError` |
 | `ChatBloc` | load messages, send prompt, receive reply, errors | `ChatOpened`, `MessageSent`, `ChatRetryRequested` | `ChatState` with loading, ready, saving, replying, and history-error phases |
-| `SettingsBloc` | provider and app settings | `SettingsRequested`, `ProviderSaved` | `SettingsLoading`, `SettingsLoaded`, `SettingsError` |
+| `SettingsBloc` | provider and app settings | `SettingsRequested`, provider draft edits, `ProviderSaved` | `SettingsLoading`, `SettingsLoaded`, `SettingsError` |
 
-Blocs depend only on use cases. They never touch HTTP, SQLite, or storage directly.
+The feature Blocs call use cases for application operations. Startup retry, provider form edits, and composer availability also use Bloc events and state.
 
 ## Local Storage Design
 

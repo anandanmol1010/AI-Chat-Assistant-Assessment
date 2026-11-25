@@ -9,7 +9,7 @@ presentation -> domain <- data
           shared failure types
 ```
 
-`lib/main.dart` is the composition root. It opens one SQLite database, owns the Dio client, and wires repositories into use cases. The conversation list keeps one `ConversationBloc`. Each chat or settings route owns its Bloc. UI code handles navigation and text controllers. Blocs own application state and have no dependencies on SQLite, platform storage, or provider HTTP formats.
+`lib/main.dart` is the composition root. It opens one SQLite database, owns the Dio client, and wires repositories into use cases. The conversation list keeps one `ConversationBloc`. Each chat or settings route owns its Bloc. Widgets handle navigation and forward field edits as events. Bloc state controls startup retry, the provider draft, and composer availability. Blocs own application state and have no dependencies on SQLite, platform storage, or provider HTTP formats.
 
 | Layer | Responsibility |
 |---|---|
@@ -25,7 +25,7 @@ presentation -> domain <- data
 |---|---|---|
 | `ConversationBloc` | `ConversationsRequested`, `ConversationCreated`, `ConversationOpened`, `ConversationDeleted` | Loading, empty, loaded, and error. A loaded state may include the resolved conversation for navigation. Events share a sequential queue so reads and writes complete in order. |
 | `ChatBloc` | `ChatOpened`, `MessageSent`, `ChatRetryRequested` | One snapshot carries saved messages, a phase, transient reply text, and an optional typed failure. A shared droppable event handler gates both send and retry. |
-| `SettingsBloc` | `SettingsRequested`, `ProviderSaved` | Loading, loaded, and error. Validation happens before writes. The screen retains the form after a failed save. |
+| `SettingsBloc` | `SettingsRequested`, provider draft edits, `ProviderSaved` | Loading, loaded, and error. Validation happens before writes. A failed save keeps the draft in Bloc state. |
 
 ## Message flow
 

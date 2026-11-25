@@ -6,6 +6,17 @@ import '../../domain/entities/conversation.dart';
 import '../blocs/chat_bloc.dart';
 import '../widgets/message_bubble.dart';
 
+final class _DraftChanged {
+  const _DraftChanged(this.text);
+  final String text;
+}
+
+class _ComposerBloc extends Bloc<_DraftChanged, String> {
+  _ComposerBloc() : super('') {
+    on<_DraftChanged>((event, emit) => emit(event.text));
+  }
+}
+
 class ChatScreen extends StatefulWidget {
   const ChatScreen({
     required this.conversation,
@@ -21,12 +32,13 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  final _draft = TextEditingController();
+  final _draftForm = GlobalKey<FormState>();
+  final _draft = _ComposerBloc();
   final _scroll = ScrollController();
 
   @override
   void dispose() {
-    _draft.dispose();
+    _draft.close();
     _scroll.dispose();
     super.dispose();
   }
@@ -35,7 +47,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) => BlocConsumer<ChatBloc, ChatState>(
     listener: (context, state) {
       if (state.acceptedMessageId != null) {
-        _draft.clear();
+        _draftForm.currentState?.reset();
         if (_scroll.hasClients) _scroll.jumpTo(0);
       }
     },
@@ -158,27 +170,30 @@ class _ChatScreenState extends State<ChatScreen> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Expanded(
-              child: TextField(
-                controller: _draft,
-                readOnly: state.busy,
-                minLines: 1,
-                maxLines: 5,
-                keyboardType: TextInputType.multiline,
-                textInputAction: TextInputAction.newline,
-                decoration: const InputDecoration(
-                  hintText: 'Write a message',
-                  border: OutlineInputBorder(),
+              child: Form(
+                key: _draftForm,
+                child: TextFormField(
+                  onChanged: (text) => _draft.add(_DraftChanged(text)),
+                  readOnly: state.busy,
+                  minLines: 1,
+                  maxLines: 5,
+                  keyboardType: TextInputType.multiline,
+                  textInputAction: TextInputAction.newline,
+                  decoration: const InputDecoration(
+                    hintText: 'Write a message',
+                    border: OutlineInputBorder(),
+                  ),
                 ),
               ),
             ),
             const SizedBox(width: 8),
-            ValueListenableBuilder<TextEditingValue>(
-              valueListenable: _draft,
-              builder: (context, draft, _) => IconButton.filled(
+            BlocBuilder<_ComposerBloc, String>(
+              bloc: _draft,
+              builder: (context, draft) => IconButton.filled(
                 tooltip: 'Send message',
-                onPressed: state.busy || draft.text.trim().isEmpty
+                onPressed: state.busy || draft.trim().isEmpty
                     ? null
-                    : () => bloc.add(MessageSent(draft.text)),
+                    : () => bloc.add(MessageSent(draft)),
                 icon: const Icon(Icons.arrow_upward),
               ),
             ),
