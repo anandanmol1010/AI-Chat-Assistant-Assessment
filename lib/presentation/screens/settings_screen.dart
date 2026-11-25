@@ -83,6 +83,12 @@ class SettingsScreen extends StatelessWidget {
   Widget _form(BuildContext context, SettingsState state, SettingsDraft draft) {
     final bloc = context.read<SettingsBloc>();
     final loading = state is SettingsLoading;
+    final actionStyle = TextButton.styleFrom(
+      padding: EdgeInsets.zero,
+      minimumSize: const Size(0, 44),
+      tapTargetSize: MaterialTapTargetSize.padded,
+      alignment: AlignmentDirectional.centerStart,
+    );
     return ListView(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
@@ -119,17 +125,17 @@ class SettingsScreen extends StatelessWidget {
               ),
               Align(
                 alignment: AlignmentDirectional.centerStart,
-                child: TextButton.icon(
+                child: TextButton(
+                  style: actionStyle,
                   onPressed: loading || draft.profileId == null
                       ? null
                       : () => bloc.add(const ProviderProfileCreated()),
-                  icon: const Icon(Icons.add_rounded),
-                  label: const Text('New profile'),
+                  child: const Text('New profile'),
                 ),
               ),
             ],
           ),
-          const Divider(height: 36),
+          const SizedBox(height: 24),
         ],
         _SettingsSection(
           title: 'Connection',
@@ -185,6 +191,7 @@ class SettingsScreen extends StatelessWidget {
               Align(
                 alignment: AlignmentDirectional.centerStart,
                 child: TextButton(
+                  style: actionStyle,
                   onPressed: loading
                       ? null
                       : () => bloc.add(const SavedKeyCleared()),
@@ -193,7 +200,7 @@ class SettingsScreen extends StatelessWidget {
               ),
           ],
         ),
-        const Divider(height: 36),
+        const SizedBox(height: 24),
         _SettingsSection(
           title: 'Response',
           children: [
@@ -273,7 +280,10 @@ class _SettingsSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(title, style: theme.textTheme.titleMedium),
+          Text(
+            title,
+            style: theme.textTheme.titleMedium?.copyWith(fontSize: 20),
+          ),
           const SizedBox(height: 10),
           ...children,
         ],
