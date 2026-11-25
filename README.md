@@ -102,7 +102,7 @@ Tests cover app launch, SQLite reopen persistence, duplicate inserts, cascading 
 
 ### Physical Android verification
 
-The ARM64 debug APK was built, installed over USB, and launched on an RMX3085 running Android 13 on 26 November 2026. A local OpenAI-compatible HTTP fixture returned a rate limit on the first request and a streamed Markdown reply on retry. The phone displayed one copy of the prompt, reopened the saved transcript after an app restart with the fixture disconnected, kept a new prompt visible after a connection failure, and deleted the test conversation. Live OpenAI and Gemini credentials were outside this smoke test.
+The ARM64 debug APK was built, installed over USB, and launched on an RMX3085 running Android 13 on 26 November 2026. A local OpenAI-compatible HTTP fixture returned a rate limit on the first request and a streamed Markdown reply on retry. The phone displayed one copy of the prompt, reopened the saved transcript after an app restart with the fixture disconnected, kept a new prompt visible after a connection failure, and deleted the test conversation. The same phone also completed five connected turns against the live Gemini API with `gemini-2.5-flash` and streaming enabled. Live OpenAI remains unverified.
 
 ### Manual smoke test
 
