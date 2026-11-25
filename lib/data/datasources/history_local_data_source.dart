@@ -9,11 +9,22 @@ class HistoryLocalDataSource {
 
   final Database _database;
 
-  Future<List<Conversation>> list() async {
-    final rows = await _database.query(
-      'conversations',
-      orderBy: 'updated_at DESC, id',
-    );
+  Future<List<Conversation>> list({String query = ''}) async {
+    final term = query.trim();
+    final rows = term.isEmpty
+        ? await _database.query('conversations', orderBy: 'updated_at DESC, id')
+        : await _database.rawQuery(
+            """
+            SELECT c.* FROM conversations c
+            WHERE instr(lower(c.title), lower(?)) > 0 OR EXISTS (
+              SELECT 1 FROM messages m
+              WHERE m.conversation_id = c.id
+                AND instr(lower(m.content), lower(?)) > 0
+            )
+            ORDER BY c.updated_at DESC, c.id
+          """,
+            [term, term],
+          );
     return rows.map(conversationFromRow).toList(growable: false);
   }
 

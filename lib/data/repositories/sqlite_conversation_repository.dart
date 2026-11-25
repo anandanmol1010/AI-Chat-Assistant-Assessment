@@ -14,7 +14,8 @@ class SqliteConversationRepository implements ConversationRepository {
   final HistoryLocalDataSource _local;
 
   @override
-  Future<Either<Failure, List<Conversation>>> list() => _read(_local.list);
+  Future<Either<Failure, List<Conversation>>> list({String query = ''}) =>
+      _read(() => _local.list(query: query));
 
   @override
   Future<Either<Failure, Conversation?>> find(String id) =>

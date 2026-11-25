@@ -9,7 +9,8 @@ class GetConversations {
   const GetConversations(this.repository);
   final ConversationRepository repository;
 
-  Future<Either<Failure, List<Conversation>>> call() => repository.list();
+  Future<Either<Failure, List<Conversation>>> call({String query = ''}) =>
+      repository.list(query: query);
 }
 
 class CreateConversation {

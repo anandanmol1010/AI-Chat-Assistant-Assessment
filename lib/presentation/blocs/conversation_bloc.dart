@@ -12,6 +12,11 @@ final class ConversationsRequested extends ConversationEvent {
   const ConversationsRequested();
 }
 
+final class ConversationSearchChanged extends ConversationEvent {
+  const ConversationSearchChanged(this.query);
+  final String query;
+}
+
 final class ConversationCreated extends ConversationEvent {
   const ConversationCreated();
 }
@@ -36,6 +41,10 @@ final class ConversationLoading extends ConversationState {
 
 final class ConversationEmpty extends ConversationState {
   const ConversationEmpty();
+}
+
+final class ConversationNoMatches extends ConversationState {
+  const ConversationNoMatches();
 }
 
 final class ConversationLoaded extends ConversationState {
@@ -63,6 +72,7 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
   final CreateConversation _create;
   final GetConversation _find;
   final DeleteConversation _delete;
+  String _query = '';
 
   Future<void> _handle(
     ConversationEvent event,
@@ -71,6 +81,11 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     switch (event) {
       case ConversationsRequested():
         emit(const ConversationLoading());
+        await _refresh(emit);
+      case ConversationSearchChanged(:final query):
+        final term = query.trim();
+        if (term == _query) return;
+        _query = term;
         await _refresh(emit);
       case ConversationCreated():
         final result = await _create();
@@ -100,13 +115,18 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     Emitter<ConversationState> emit, {
     Conversation? opened,
   }) async {
-    final result = await _list();
+    final result = await _list(query: _query);
     emit(
       result.match(
         (_) => const ConversationError('Could not load your conversations.'),
-        (chats) => chats.isEmpty
-            ? const ConversationEmpty()
-            : ConversationLoaded(List.unmodifiable(chats), opened: opened),
+        (chats) {
+          if (chats.isNotEmpty || opened != null) {
+            return ConversationLoaded(List.unmodifiable(chats), opened: opened);
+          }
+          return _query.isEmpty
+              ? const ConversationEmpty()
+              : const ConversationNoMatches();
+        },
       ),
     );
   }

@@ -66,6 +66,54 @@ void main() {
     },
   );
 
+  test(
+    'search finds titles and saved messages once and treats punctuation literally',
+    () async {
+      sqfliteFfiInit();
+      final db = await openHistoryDatabase(
+        factory: databaseFactoryFfi,
+        path: inMemoryDatabasePath,
+      );
+      addTearDown(db.close);
+      final repository = SqliteConversationRepository(
+        HistoryLocalDataSource(db),
+      );
+      final chat = (await repository.create()).getOrElse(
+        (_) => throw StateError('Setup failed'),
+      );
+      final other = (await repository.create()).getOrElse(
+        (_) => throw StateError('Setup failed'),
+      );
+      for (final (id, role, content) in [
+        ('prompt', MessageRole.user, 'Build a Flutter feature'),
+        ('reply', MessageRole.assistant, 'Flutter needs a 50% budget'),
+      ]) {
+        expect(
+          (await repository.append(
+            Message(
+              id: id,
+              conversationId: chat.id,
+              role: role,
+              content: content,
+              timestamp: DateTime.utc(2026),
+            ),
+          )).isRight(),
+          isTrue,
+        );
+      }
+      Future<List<String>> ids(String query) async =>
+          (await repository.list(query: query))
+              .getOrElse((_) => throw StateError('Search failed'))
+              .map((conversation) => conversation.id)
+              .toList();
+      expect(await ids(' FLUTTER '), [chat.id]);
+      expect(await ids('50%'), [chat.id]);
+      expect(await ids('_'), isEmpty);
+      expect(await ids('new chat'), [other.id]);
+      expect(await ids(''), unorderedEquals([chat.id, other.id]));
+    },
+  );
+
   test('ConversationBloc creates, opens, and deletes SQLite chats', () async {
     sqfliteFfiInit();
     final db = await openHistoryDatabase(

@@ -15,7 +15,7 @@ Saved conversations stay available offline. If a reply fails, retry the saved pr
 - Providers: OpenAI, Gemini, any OpenAI-compatible endpoint (OpenRouter, LM Studio, ...)
 - Full offline read access to saved conversations and messages
 - Typed error handling: network, timeout, auth, rate limit, invalid response
-- Bonus: streaming responses, markdown rendering
+- Bonuses: streaming responses, Markdown rendering, and offline search across conversation titles and message text
 
 ## Setup
 

@@ -127,7 +127,7 @@ class _ConversationStore implements ConversationRepository {
   Future<Either<Failure, Conversation?>> find(String id) =>
       throw UnimplementedError();
   @override
-  Future<Either<Failure, List<Conversation>>> list() =>
+  Future<Either<Failure, List<Conversation>>> list({String query = ''}) =>
       throw UnimplementedError();
 }
 

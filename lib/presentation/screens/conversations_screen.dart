@@ -43,52 +43,78 @@ class ConversationsScreen extends StatelessWidget {
               ),
             ],
           ),
-          body: switch (state) {
-            ConversationLoading() => const Center(
-              child: CircularProgressIndicator(),
-            ),
-            ConversationEmpty() => const Center(
-              child: Text('No conversations yet.'),
-            ),
-            ConversationError(:final message) => Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(message),
-                  TextButton(
-                    onPressed: () => bloc.add(const ConversationsRequested()),
-                    child: const Text('Reload'),
+          body: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                child: TextField(
+                  onChanged: (query) =>
+                      bloc.add(ConversationSearchChanged(query)),
+                  textInputAction: TextInputAction.search,
+                  decoration: const InputDecoration(
+                    prefixIcon: Icon(Icons.search),
+                    labelText: 'Search conversations',
+                    hintText: 'Search titles and messages',
+                    border: OutlineInputBorder(),
                   ),
-                ],
+                ),
               ),
-            ),
-            ConversationLoaded(:final conversations) => ListView.builder(
-              itemCount: conversations.length,
-              itemBuilder: (context, index) {
-                final chat = conversations[index];
-                return ListTile(
-                  title: Text(
-                    chat.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+              Expanded(
+                child: switch (state) {
+                  ConversationLoading() => const Center(
+                    child: CircularProgressIndicator(),
                   ),
-                  subtitle: Text(
-                    MaterialLocalizations.of(
-                      context,
-                    ).formatShortDate(chat.updatedAt.toLocal()),
+                  ConversationEmpty() => const Center(
+                    child: Text('No conversations yet.'),
                   ),
-                  onTap: () => bloc.add(ConversationOpened(chat.id)),
-                  trailing: IconButton(
-                    tooltip: 'Delete chat',
-                    icon: const Icon(Icons.delete_outline),
-                    onPressed: () => _confirmDelete(context, chat),
+                  ConversationNoMatches() => const Center(
+                    child: Text('No conversations match your search.'),
                   ),
-                );
-              },
-            ),
-          },
+                  ConversationError(:final message) => Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(message),
+                        TextButton(
+                          onPressed: () =>
+                              bloc.add(const ConversationsRequested()),
+                          child: const Text('Reload'),
+                        ),
+                      ],
+                    ),
+                  ),
+                  ConversationLoaded(:final conversations) => ListView.builder(
+                    padding: const EdgeInsets.only(bottom: 88),
+                    itemCount: conversations.length,
+                    itemBuilder: (context, index) {
+                      final chat = conversations[index];
+                      return ListTile(
+                        title: Text(
+                          chat.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        subtitle: Text(
+                          MaterialLocalizations.of(
+                            context,
+                          ).formatShortDate(chat.updatedAt.toLocal()),
+                        ),
+                        onTap: () => bloc.add(ConversationOpened(chat.id)),
+                        trailing: IconButton(
+                          tooltip: 'Delete chat',
+                          icon: const Icon(Icons.delete_outline),
+                          onPressed: () => _confirmDelete(context, chat),
+                        ),
+                      );
+                    },
+                  ),
+                },
+              ),
+            ],
+          ),
           floatingActionButton: switch (state) {
             ConversationEmpty() ||
+            ConversationNoMatches() ||
             ConversationLoaded() => FloatingActionButton.extended(
               onPressed: () => bloc.add(const ConversationCreated()),
               icon: const Icon(Icons.add),

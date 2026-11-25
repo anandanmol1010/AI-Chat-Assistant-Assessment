@@ -34,7 +34,7 @@ presentation -> domain <- data
 3. Stream partial text into chat state. Persist the assistant message after the provider signals completion. If streaming is disabled, parse one JSON reply and use the same save path.
 4. For an empty, interrupted, or malformed response, keep the saved user message and show the error. Retry uses the same history without inserting another user row. Reopening a chat also offers retry if its last message is from the user.
 
-Storage can be read and tested independently of any AI service. On a cold start the UI opens history directly from SQLite. Typed failures distinguish network problems, timeouts, credential rejection, rate limits, provider errors, malformed responses, and storage errors.
+Conversation search runs entirely in SQLite. It matches literal substrings in titles and saved messages and returns each conversation once, ordered by recency. Storage can be read and tested independently of any AI service. On a cold start the UI opens history directly from SQLite. Typed failures distinguish network problems, timeouts, credential rejection, rate limits, provider errors, malformed responses, and storage errors.
 
 ## Provider and storage boundaries
 
