@@ -6,7 +6,7 @@ Format: context, decision, trade-off. Status is `proposed` until the code confir
 - **Context:** conversations have many messages; deleting a conversation must remove its messages
 - **Decision:** SQLite with foreign keys and `ON DELETE CASCADE`
 - **Trade-off:** more boilerplate than Hive, but relational integrity, indexed queries, and easy search later
-- **Status:** proposed
+- **Status:** implemented for conversation and message history
 
 ## 2. API key in secure storage, not in the database
 - **Context:** the suggested schema has `apiKey` in the providers table

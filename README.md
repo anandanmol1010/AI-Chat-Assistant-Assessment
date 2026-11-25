@@ -2,7 +2,7 @@
 
 A Flutter chat app that talks to configurable AI providers (OpenAI, Gemini, any OpenAI-compatible endpoint) and keeps every conversation on the device.
 
-> Status: Android and iOS Flutter scaffold is available. The feature, architecture, and storage sections describe the planned implementation.
+> Status: The Android and iOS scaffold and SQLite history layer are implemented. The app shell is available. Chat features and provider settings are planned.
 
 ## Features
 
@@ -78,7 +78,7 @@ Blocs depend only on use cases. They never touch HTTP, SQLite, or storage direct
 
 ## Local Storage Design
 
-SQLite (`sqflite`) with foreign keys on.
+SQLite (`sqflite`) stores conversation and message history with foreign keys enabled. Timestamps use UTC epoch microseconds. Message insertion, first-message title, and conversation recency are updated in one transaction. The provider table below is planned.
 
 ```
 conversations(id TEXT PK, title TEXT, created_at INT, updated_at INT)
@@ -95,7 +95,7 @@ API keys are **not** in SQLite. They live in `flutter_secure_storage`, keyed by 
 flutter test
 ```
 
-Planned coverage includes Bloc events, repository persistence, and provider error mapping. Flutter tests are pending app implementation.
+Tests cover app launch, SQLite reopen persistence, duplicate inserts, and cascading deletion. Bloc events and provider error mapping are planned.
 
 ## AI Usage
 

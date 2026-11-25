@@ -1,6 +1,6 @@
 # Architecture
 
-This document describes the proposed implementation.
+Conversation and message persistence are implemented. The Bloc and provider flows below describe the planned implementation.
 
 ## Layers and dependency rule
 
