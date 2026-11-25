@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/conversation.dart';
 import '../blocs/conversation_bloc.dart';
+import '../widgets/theme_toggle_button.dart';
 
 class ConversationsScreen extends StatelessWidget {
   const ConversationsScreen({
@@ -34,6 +35,7 @@ class ConversationsScreen extends StatelessWidget {
           appBar: AppBar(
             title: const Text('AI Chat Assistant'),
             actions: [
+              const ThemeToggleButton(),
               IconButton(
                 tooltip: 'Provider settings',
                 icon: const Icon(Icons.settings_outlined),
