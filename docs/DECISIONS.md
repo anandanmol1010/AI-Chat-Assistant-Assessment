@@ -10,9 +10,9 @@ Format: context, decision, trade-off. Status is `proposed` until the code confir
 
 ## 2. API key in secure storage, not in the database
 - **Context:** the suggested schema has `apiKey` in the providers table
-- **Decision:** store the key in `flutter_secure_storage` keyed by provider id; SQLite holds only non-secret fields
+- **Decision:** store the key in `flutter_secure_storage`; SQLite stores one active configuration with an opaque key reference. Write the new key before committing its reference, then remove the previous key
 - **Trade-off:** one more storage layer; reduces exposure when the SQLite database is copied
-- **Status:** proposed
+- **Status:** implemented
 
 ## 3. Provider abstraction by API shape
 - **Context:** OpenAI, OpenRouter, LM Studio share one request format; Gemini differs

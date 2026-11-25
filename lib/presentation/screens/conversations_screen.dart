@@ -7,9 +7,14 @@ import '../blocs/conversation_bloc.dart';
 import 'stored_chat_screen.dart';
 
 class ConversationsScreen extends StatelessWidget {
-  const ConversationsScreen({required this.getMessages, super.key});
+  const ConversationsScreen({
+    required this.getMessages,
+    required this.settingsBuilder,
+    super.key,
+  });
 
   final GetMessages getMessages;
+  final WidgetBuilder settingsBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +38,18 @@ class ConversationsScreen extends StatelessWidget {
       builder: (context, state) {
         final bloc = context.read<ConversationBloc>();
         return Scaffold(
-          appBar: AppBar(title: const Text('AI Chat Assistant')),
+          appBar: AppBar(
+            title: const Text('AI Chat Assistant'),
+            actions: [
+              IconButton(
+                tooltip: 'Provider settings',
+                icon: const Icon(Icons.settings_outlined),
+                onPressed: () => Navigator.of(
+                  context,
+                ).push<bool>(MaterialPageRoute(builder: settingsBuilder)),
+              ),
+            ],
+          ),
           body: switch (state) {
             ConversationLoading() => const Center(
               child: CircularProgressIndicator(),

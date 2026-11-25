@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'data/repositories/local_settings_repository.dart';
+import 'domain/repositories/settings_repository.dart';
+import 'domain/usecases/provider_settings.dart';
+import 'presentation/blocs/settings_bloc.dart';
+import 'presentation/screens/settings_screen.dart';
 
 import 'data/datasources/history_database.dart';
 import 'data/datasources/history_local_data_source.dart';
@@ -11,10 +17,18 @@ import 'presentation/screens/conversations_screen.dart';
 
 void main() => runApp(const AiChatAssistantApp());
 
-Future<ConversationRepository> openConversationRepository() async =>
-    SqliteConversationRepository(
-      HistoryLocalDataSource(await openHistoryDatabase()),
-    );
+typedef _Repositories = ({
+  ConversationRepository history,
+  SettingsRepository settings,
+});
+
+Future<_Repositories> _openRepositories() async {
+  final db = await openHistoryDatabase();
+  return (
+    history: SqliteConversationRepository(HistoryLocalDataSource(db)),
+    settings: LocalSettingsRepository(db, const FlutterSecureStorage()),
+  );
+}
 
 class AiChatAssistantApp extends StatelessWidget {
   const AiChatAssistantApp({super.key});
@@ -35,15 +49,16 @@ class _HistoryStartup extends StatefulWidget {
 }
 
 class _HistoryStartupState extends State<_HistoryStartup> {
-  late var _history = openConversationRepository();
+  late var _history = _openRepositories();
 
   @override
-  Widget build(BuildContext context) => FutureBuilder<ConversationRepository>(
+  Widget build(BuildContext context) => FutureBuilder<_Repositories>(
     future: _history,
     builder: (context, snapshot) {
-      final repository = snapshot.data;
+      final repositories = snapshot.data;
       if (snapshot.connectionState == ConnectionState.done &&
-          repository != null) {
+          repositories != null) {
+        final repository = repositories.history;
         return BlocProvider(
           create: (_) => ConversationBloc(
             list: GetConversations(repository),
@@ -51,7 +66,16 @@ class _HistoryStartupState extends State<_HistoryStartup> {
             find: GetConversation(repository),
             delete: DeleteConversation(repository),
           )..add(const ConversationsRequested()),
-          child: ConversationsScreen(getMessages: GetMessages(repository)),
+          child: ConversationsScreen(
+            getMessages: GetMessages(repository),
+            settingsBuilder: (_) => BlocProvider(
+              create: (_) => SettingsBloc(
+                load: LoadProvider(repositories.settings),
+                save: SaveProvider(repositories.settings),
+              ),
+              child: const SettingsScreen(),
+            ),
+          ),
         );
       }
       return Scaffold(
@@ -63,9 +87,8 @@ class _HistoryStartupState extends State<_HistoryStartup> {
                   children: [
                     const Text('Could not open local storage.'),
                     TextButton(
-                      onPressed: () => setState(
-                        () => _history = openConversationRepository(),
-                      ),
+                      onPressed: () =>
+                          setState(() => _history = _openRepositories()),
                       child: const Text('Retry'),
                     ),
                   ],

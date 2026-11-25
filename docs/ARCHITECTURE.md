@@ -1,6 +1,6 @@
 # Architecture
 
-SQLite history and ConversationBloc are implemented. ChatBloc, SettingsBloc, and provider integration describe planned implementation.
+SQLite history, ConversationBloc, and SettingsBloc are implemented. ChatBloc and provider request handling describe planned implementation.
 
 ## Layers and dependency rule
 
@@ -20,7 +20,7 @@ presentation  ->  domain  <-  data
 
 - `Conversation { id, title, createdAt, updatedAt }`
 - `Message { id, conversationId, role, content, timestamp }`
-- `ProviderConfig { id, providerName, protocol, baseUrl, model, isActive }`
+- `ProviderConfig { name, protocol, baseUrl, model, apiKey }` (the key stays transient in memory)
 - `MessageRole { user, assistant, system }`
 
 ## Use cases
@@ -29,7 +29,7 @@ presentation  ->  domain  <-  data
 |---|---|
 | `GetConversations`, `CreateConversation`, `GetConversation`, `DeleteConversation` | ConversationBloc |
 | `GetMessages`, `SendMessage`, `StreamAssistantReply` | ChatBloc |
-| `GetProviders`, `SaveProvider`, `SetActiveProvider`, `DeleteProvider` | SettingsBloc |
+| `LoadProvider`, `SaveProvider` | SettingsBloc |
 
 ## Provider abstraction
 
@@ -92,9 +92,9 @@ Conversation events share a sequential queue to preserve the order of reads and 
 
 ### SettingsBloc
 
-Events: `SettingsRequested`, `ProviderSaved`, `ProviderSelected`, `ProviderDeleted`
+Events: `SettingsRequested`, `ProviderSaved`
 
-States: `SettingsLoading`, `SettingsLoaded(providers, active)`, `SettingsError`
+States: `SettingsLoading`, `SettingsLoaded(config, saved)`, `SettingsError`
 
 ## Data flow: sending a message
 

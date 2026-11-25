@@ -9,11 +9,15 @@ Future<Database> openHistoryDatabase({
   return database.openDatabase(
     path ?? p.join(await database.getDatabasesPath(), 'chat_history.db'),
     options: OpenDatabaseOptions(
-      version: 1,
+      version: 2,
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
+      onUpgrade: (db, oldVersion, _) async {
+        if (oldVersion < 2) await _createProviderTable(db);
+      },
       onCreate: (db, version) async {
+        await _createProviderTable(db);
         await db.execute('''
           CREATE TABLE conversations (
             id TEXT NOT NULL PRIMARY KEY,
@@ -40,3 +44,14 @@ Future<Database> openHistoryDatabase({
     ),
   );
 }
+
+Future<void> _createProviderTable(Database db) => db.execute("""
+  CREATE TABLE provider_settings (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    provider_name TEXT NOT NULL,
+    protocol TEXT NOT NULL,
+    base_url TEXT NOT NULL,
+    model TEXT NOT NULL,
+    key_ref TEXT
+  )
+""");

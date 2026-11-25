@@ -2,7 +2,7 @@
 
 A Flutter chat app that talks to configurable AI providers (OpenAI, Gemini, any OpenAI-compatible endpoint) and keeps every conversation on the device.
 
-> Status: The Android and iOS app can create, open, list, and delete local conversations through ConversationBloc. Message sending and provider settings are planned.
+> Status: The Android and iOS app can create, open, list, and delete local conversations through ConversationBloc. Provider configuration is available. Message sending is planned.
 
 ## Features
 
@@ -29,14 +29,14 @@ flutter pub get
 flutter run
 ```
 
-Once provider settings are implemented, open **Settings** and add a provider.
+Open **Provider settings**, choose a protocol, enter the base URL and model ID, then save.
 
 | Provider | Base URL | Notes |
 |---|---|---|
 | OpenAI | `https://api.openai.com/v1` | API key required |
 | OpenRouter | `https://openrouter.ai/api/v1` | API key required |
 | LM Studio | `http://localhost:1234/v1` | Android emulator: use `http://10.0.2.2:1234/v1` |
-| Gemini | `https://generativelanguage.googleapis.com` | API key required |
+| Gemini | `https://generativelanguage.googleapis.com/v1beta` | API key required |
 
 ## Environment Variables
 
@@ -74,22 +74,22 @@ Details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Reasons behind choices: [
 |---|---|---|---|
 | `ConversationBloc` | list, create, delete, open conversations | `ConversationsRequested`, `ConversationCreated`, `ConversationOpened`, `ConversationDeleted` | `ConversationLoading`, `ConversationLoaded`, `ConversationEmpty`, `ConversationError` |
 | `ChatBloc` | load messages, send prompt, receive reply, errors | `ChatOpened`, `MessageSent`, `ChatRetryRequested` | `ChatInitial`, `ChatLoading`, `ChatSuccess`, `ChatError` |
-| `SettingsBloc` | provider and app settings | `SettingsRequested`, `ProviderSaved`, `ProviderSelected`, `ProviderDeleted` | `SettingsLoading`, `SettingsLoaded`, `SettingsError` |
+| `SettingsBloc` | provider and app settings | `SettingsRequested`, `ProviderSaved` | `SettingsLoading`, `SettingsLoaded`, `SettingsError` |
 
 Blocs depend only on use cases. They never touch HTTP, SQLite, or storage directly.
 
 ## Local Storage Design
 
-SQLite (`sqflite`) stores conversation and message history with foreign keys enabled. Timestamps use UTC epoch microseconds. Message insertion, first-message title, and conversation recency are updated in one transaction. The provider table below is planned.
+SQLite (`sqflite`) stores conversation and message history with foreign keys enabled. Timestamps use UTC epoch microseconds. Message insertion, first-message title, and conversation recency are updated in one transaction. Provider metadata and an opaque key reference are stored separately from the key.
 
 ```
 conversations(id TEXT PK, title TEXT, created_at INT, updated_at INT)
 messages(id TEXT PK, conversation_id TEXT FK -> conversations ON DELETE CASCADE,
          role TEXT, content TEXT, timestamp INT)
-providers(id TEXT PK, provider_name TEXT, protocol TEXT, base_url TEXT, model TEXT, is_active INT)
+provider_settings(id INTEGER PK, provider_name TEXT, protocol TEXT, base_url TEXT, model TEXT, key_ref TEXT)
 ```
 
-API keys are **not** in SQLite. They live in `flutter_secure_storage`, keyed by provider id.
+API keys are **not** in SQLite. They live in `flutter_secure_storage`, referenced by an opaque ID. The app stores one active configuration.
 
 ## Testing
 
