@@ -70,10 +70,14 @@ void main() {
       final next = remote.nextRequest.stream.first;
       bloc.add(const ChatRetryRequested());
       await next;
-      remote.current.add(const Right('**Hi'));
+      remote.current.add(
+        const Right((text: '**Hi', modelName: 'model-at-retry')),
+      );
       expect((await partial).partialReply, '**Hi');
       expect((await db.query('messages')), hasLength(1));
-      remote.current.add(const Right('**'));
+      remote.current.add(
+        const Right((text: '**', modelName: 'model-at-retry')),
+      );
       await remote.current.close();
       final complete = await answered;
       expect(complete.messages.map((message) => message.content), [
@@ -90,12 +94,12 @@ void main() {
 class _Remote implements ChatRepository {
   final histories = <List<Message>>[];
   final nextRequest = StreamController<void>.broadcast(sync: true);
-  late StreamController<Either<Failure, String>> current;
+  late StreamController<Either<Failure, ReplyDelta>> current;
 
   @override
-  Stream<Either<Failure, String>> reply(List<Message> history) {
+  Stream<Either<Failure, ReplyDelta>> reply(List<Message> history) {
     histories.add(history);
-    current = StreamController<Either<Failure, String>>();
+    current = StreamController<Either<Failure, ReplyDelta>>();
     nextRequest.add(null);
     return current.stream;
   }

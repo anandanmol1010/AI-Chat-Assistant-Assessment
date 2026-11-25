@@ -21,7 +21,7 @@ class RemoteChatRepository implements ChatRepository {
   final LoadProvider _loadProvider;
 
   @override
-  Stream<Either<Failure, String>> reply(List<Message> history) async* {
+  Stream<Either<Failure, ReplyDelta>> reply(List<Message> history) async* {
     final settings = await _loadProvider();
     final failure = settings.fold<Failure?>((failure) => failure, (_) => null);
     if (failure != null) {
@@ -77,7 +77,7 @@ class RemoteChatRepository implements ChatRepository {
           );
           if (chunk.text.isNotEmpty) {
             hasText |= chunk.text.trim().isNotEmpty;
-            yield Right(chunk.text);
+            yield Right((text: chunk.text, modelName: config.model));
           }
           if (chunk.finished) {
             if (hasText) return;
@@ -93,7 +93,7 @@ class RemoteChatRepository implements ChatRepository {
         );
         yield chunk.text.trim().isEmpty
             ? const Left(InvalidResponseFailure())
-            : Right(chunk.text);
+            : Right((text: chunk.text, modelName: config.model));
       }
     } on DioException catch (error) {
       yield Left(_mapDioError(error));

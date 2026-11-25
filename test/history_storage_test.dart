@@ -39,6 +39,24 @@ void main() {
       try {
         expect((await repository.append(userMessage)).isRight(), isTrue);
         expect((await repository.append(userMessage)).isLeft(), isTrue);
+        for (final (id, model) in [
+          ('r1', 'gemini-fixture'),
+          ('r2', 'openai-fixture'),
+        ]) {
+          expect(
+            (await repository.append(
+              Message(
+                id: id,
+                conversationId: conversation.id,
+                role: MessageRole.assistant,
+                content: 'Fixture reply',
+                timestamp: timestamp,
+                modelName: model,
+              ),
+            )).isRight(),
+            isTrue,
+          );
+        }
       } finally {
         await db.close();
       }
@@ -59,7 +77,12 @@ void main() {
       final messages = (await restored.messages(
         conversation.id,
       )).getOrElse((_) => throw StateError('Messages could not be loaded'));
-      expect(messages.single.content, userMessage.content);
+      expect(messages.first.content, userMessage.content);
+      expect(messages.map((message) => message.modelName), [
+        null,
+        'gemini-fixture',
+        'openai-fixture',
+      ]);
       expect((await restored.delete(conversation.id)).isRight(), isTrue);
       expect(await reopened.query('messages'), isEmpty);
       expect((await restored.append(userMessage)).isLeft(), isTrue);

@@ -122,6 +122,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       ),
     );
     final buffer = StringBuffer();
+    String? modelName;
     await for (final item in _generateReply(history)) {
       if (emit.isDone) return;
       final failure = item.fold<Failure?>((failure) => failure, (_) => null);
@@ -135,7 +136,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         );
         return;
       }
-      buffer.write(item.getOrElse((_) => ''));
+      if (item.getRight().toNullable() case final delta?) {
+        modelName ??= delta.modelName;
+        buffer.write(delta.text);
+      }
       emit(
         ChatState(
           phase: ChatPhase.replying,
@@ -155,7 +159,12 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       );
       return;
     }
-    final reply = _message(buffer.toString(), MessageRole.assistant, history);
+    final reply = _message(
+      buffer.toString(),
+      MessageRole.assistant,
+      history,
+      modelName: modelName,
+    );
     final result = await _saveMessage(reply);
     emit(
       result.match(
@@ -172,7 +181,12 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     );
   }
 
-  Message _message(String content, MessageRole role, List<Message> history) {
+  Message _message(
+    String content,
+    MessageRole role,
+    List<Message> history, {
+    String? modelName,
+  }) {
     final now = DateTime.now().toUtc();
     final previous = history.lastOrNull?.timestamp;
     final timestamp = previous == null || now.isAfter(previous)
@@ -184,6 +198,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       role: role,
       content: content,
       timestamp: timestamp,
+      modelName: modelName,
     );
   }
 }

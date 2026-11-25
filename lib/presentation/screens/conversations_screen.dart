@@ -35,7 +35,6 @@ class ConversationsScreen extends StatelessWidget {
     builder: (context, state) {
       final bloc = context.read<ConversationBloc>();
       final theme = Theme.of(context);
-      final colors = theme.colorScheme;
       final canCreate =
           state is ConversationLoaded ||
           state is ConversationEmpty ||
@@ -43,32 +42,7 @@ class ConversationsScreen extends StatelessWidget {
       return Scaffold(
         appBar: AppBar(
           titleSpacing: 20,
-          title: Row(
-            children: [
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  color: colors.primary,
-                  borderRadius: BorderRadius.circular(11),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Icon(
-                    Icons.chat_bubble_outline_rounded,
-                    size: 18,
-                    color: colors.onPrimary,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              const Flexible(
-                child: Text(
-                  'AI Chat Assistant',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
+          title: const Text('AI Chat Assistant'),
           actions: [
             const ThemeToggleButton(),
             IconButton(
@@ -89,9 +63,22 @@ class ConversationsScreen extends StatelessWidget {
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 14),
-                  child: Text(
-                    'Conversations',
-                    style: theme.textTheme.headlineMedium,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Conversations',
+                          style: theme.textTheme.headlineMedium,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      FilledButton.tonal(
+                        onPressed: canCreate
+                            ? () => bloc.add(const ConversationCreated())
+                            : null,
+                        child: const Text('New chat'),
+                      ),
+                    ],
                   ),
                 ),
                 Padding(
@@ -138,10 +125,10 @@ class ConversationsScreen extends StatelessWidget {
                         padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
                         itemCount: conversations.length,
                         separatorBuilder: (context, index) =>
-                            const SizedBox(height: 10),
+                            const Divider(height: 1),
                         itemBuilder: (context, index) {
                           final conversation = conversations[index];
-                          return _ConversationCard(
+                          return _ConversationRow(
                             conversation: conversation,
                             onOpen: () =>
                                 bloc.add(ConversationOpened(conversation.id)),
@@ -153,29 +140,6 @@ class ConversationsScreen extends StatelessWidget {
                   },
                 ),
               ],
-            ),
-          ),
-        ),
-        bottomNavigationBar: SafeArea(
-          top: false,
-          child: Align(
-            alignment: Alignment.topCenter,
-            heightFactor: 1,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 720),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: canCreate
-                        ? () => bloc.add(const ConversationCreated())
-                        : null,
-                    icon: const Icon(Icons.add_rounded),
-                    label: const Text('New chat'),
-                  ),
-                ),
-              ),
             ),
           ),
         ),
@@ -210,8 +174,8 @@ class ConversationsScreen extends StatelessWidget {
   }
 }
 
-class _ConversationCard extends StatelessWidget {
-  const _ConversationCard({
+class _ConversationRow extends StatelessWidget {
+  const _ConversationRow({
     required this.conversation,
     required this.onOpen,
     required this.onDelete,
@@ -228,51 +192,29 @@ class _ConversationCard extends StatelessWidget {
     final date = MaterialLocalizations.of(
       context,
     ).formatShortDate(conversation.updatedAt.toLocal());
-    return Material(
-      color: colors.surfaceContainerLow,
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: colors.outlineVariant),
+    return ListTile(
+      minTileHeight: 65,
+      contentPadding: EdgeInsets.zero,
+      title: Text(
+        conversation.title,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: theme.textTheme.titleSmall,
       ),
-      child: ListTile(
-        minTileHeight: 76,
-        contentPadding: const EdgeInsetsDirectional.fromSTEB(14, 8, 6, 8),
-        leading: DecoratedBox(
-          decoration: BoxDecoration(
-            color: colors.primaryContainer,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(10),
-            child: Icon(
-              Icons.chat_bubble_outline_rounded,
-              size: 18,
-              color: colors.onPrimaryContainer,
-            ),
-          ),
+      subtitle: Text(
+        date,
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: colors.onSurfaceVariant,
         ),
-        title: Text(
-          conversation.title,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.titleSmall,
-        ),
-        subtitle: Text(
-          'Updated $date',
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: colors.onSurfaceVariant,
-          ),
-        ),
-        onTap: onOpen,
-        trailing: PopupMenuButton<String>(
-          tooltip: 'Conversation options',
-          icon: const Icon(Icons.more_horiz_rounded),
-          onSelected: (_) => onDelete(),
-          itemBuilder: (_) => const [
-            PopupMenuItem(value: 'delete', child: Text('Delete chat')),
-          ],
-        ),
+      ),
+      onTap: onOpen,
+      trailing: PopupMenuButton<String>(
+        tooltip: 'Conversation options',
+        icon: const Icon(Icons.more_horiz_rounded),
+        onSelected: (_) => onDelete(),
+        itemBuilder: (_) => const [
+          PopupMenuItem(value: 'delete', child: Text('Delete chat')),
+        ],
       ),
     );
   }

@@ -10,30 +10,30 @@ class AppTheme {
   static ThemeData _build(Brightness brightness) {
     final dark = brightness == Brightness.dark;
     final colors = ColorScheme.fromSeed(
-      seedColor: const Color(0xFF2452D8),
+      seedColor: const Color(0xFF186358),
       brightness: brightness,
-      primary: dark ? const Color(0xFFA4BCFF) : const Color(0xFF234DC4),
-      onPrimary: dark ? const Color(0xFF101F50) : Colors.white,
+      primary: dark ? const Color(0xFF9CD3C4) : const Color(0xFF1D6255),
+      onPrimary: dark ? const Color(0xFF10251F) : Colors.white,
       primaryContainer: dark
-          ? const Color(0xFF142652)
-          : const Color(0xFFE4EBFF),
+          ? const Color(0xFF142822)
+          : const Color(0xFFE5EEE8),
       onPrimaryContainer: dark
-          ? const Color(0xFFE4ECFF)
-          : const Color(0xFF152C74),
-      surface: dark ? Colors.black : const Color(0xFFF5F7FC),
-      onSurface: dark ? const Color(0xFFF2F5FF) : const Color(0xFF151D32),
+          ? const Color(0xFFDCECE4)
+          : const Color(0xFF1F4539),
+      surface: dark ? Colors.black : const Color(0xFFFAF9F6),
+      onSurface: dark ? const Color(0xFFECEDE9) : const Color(0xFF202420),
       onSurfaceVariant: dark
-          ? const Color(0xFFA6AEC1)
-          : const Color(0xFF505D77),
-      surfaceContainerLow: dark ? const Color(0xFF080B12) : Colors.white,
+          ? const Color(0xFFA9B0AA)
+          : const Color(0xFF58615B),
+      surfaceContainerLow: dark ? const Color(0xFF0D100E) : Colors.white,
       surfaceContainer: dark
-          ? const Color(0xFF0D111B)
-          : const Color(0xFFEDF1F9),
+          ? const Color(0xFF131815)
+          : const Color(0xFFEFEFE9),
       surfaceContainerHigh: dark
-          ? const Color(0xFF141A28)
-          : const Color(0xFFE8EDF8),
-      outline: dark ? const Color(0xFF65718B) : const Color(0xFF697894),
-      outlineVariant: dark ? const Color(0xFF29334A) : const Color(0xFFD6DEEE),
+          ? const Color(0xFF1C221E)
+          : const Color(0xFFE8EAE3),
+      outline: dark ? const Color(0xFF657269) : const Color(0xFF6E796F),
+      outlineVariant: dark ? const Color(0xFF262E29) : const Color(0xFFDDDCD4),
       errorContainer: dark ? const Color(0xFF321A24) : const Color(0xFFFFE9EC),
       onErrorContainer: dark
           ? const Color(0xFFFFCBD1)
@@ -42,13 +42,13 @@ class AppTheme {
     final base = ThemeData(colorScheme: colors, useMaterial3: true);
     final text = base.textTheme.copyWith(
       headlineMedium: base.textTheme.headlineMedium?.copyWith(
-        fontSize: 34,
+        fontSize: 29,
         height: 1.08,
-        fontWeight: FontWeight.w800,
-        letterSpacing: -1.4,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.8,
       ),
       titleLarge: base.textTheme.titleLarge?.copyWith(
-        fontWeight: FontWeight.w800,
+        fontWeight: FontWeight.w700,
         letterSpacing: -.55,
       ),
       titleMedium: base.textTheme.titleMedium?.copyWith(

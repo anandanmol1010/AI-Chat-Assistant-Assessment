@@ -26,16 +26,7 @@ class ScreenStatus extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  color: colors.primaryContainer,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Icon(icon, size: 26, color: colors.onPrimaryContainer),
-                ),
-              ),
+              Icon(icon, size: 28, color: colors.onSurfaceVariant),
               const SizedBox(height: 16),
               Text(
                 title,

@@ -9,11 +9,14 @@ Future<Database> openHistoryDatabase({
   return database.openDatabase(
     path ?? p.join(await database.getDatabasesPath(), 'chat_history.db'),
     options: OpenDatabaseOptions(
-      version: 5,
+      version: 6,
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
       onUpgrade: (db, oldVersion, _) async {
+        if (oldVersion < 6) {
+          await db.execute('ALTER TABLE messages ADD COLUMN model_name TEXT');
+        }
         if (oldVersion < 4) await _createAppPreferences(db);
         if (oldVersion < 2) {
           await _createProviderTable(db);
@@ -44,7 +47,8 @@ Future<Database> openHistoryDatabase({
               REFERENCES conversations(id) ON DELETE CASCADE,
             role TEXT NOT NULL CHECK (role IN ('user', 'assistant', 'system')),
             content TEXT NOT NULL,
-            timestamp INTEGER NOT NULL
+            timestamp INTEGER NOT NULL,
+            model_name TEXT
           )
         ''');
         await db.execute('''

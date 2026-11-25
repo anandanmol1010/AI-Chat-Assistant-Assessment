@@ -6,14 +6,14 @@ A Flutter chat app that talks to configurable AI providers (OpenAI, Gemini, any 
 
 ## Interface
 
-The conversation list, chat, and settings share a custom cobalt palette. Dark mode uses a true-black screen background and separate surfaces for cards, messages, and inputs. Provider settings are grouped by profile, connection, and response.
+The app uses a warm light palette, restrained teal accents, and a true-black dark background. Conversation rows use dividers. Assistant replies sit directly on the chat canvas. Provider settings are grouped by profile, connection, and response.
 
 ## Features
 
 Saved conversations stay available offline. If a reply fails, retry the saved prompt directly from the chat.
 
 - Create, open, and delete conversations
-- Chat screen with user and assistant bubbles, timestamps, multiline composer
+- Chat screen with timestamped messages, a multiline composer, and the original configured model shown under each new assistant reply
 - Typing and request progress indicators, duplicate-request guard, empty-message guard
 - Provider settings: name, base URL, API key, model (persisted)
 - Providers: OpenAI, Gemini, any OpenAI-compatible endpoint (OpenRouter, LM Studio, ...)
@@ -91,7 +91,7 @@ SQLite (`sqflite`) stores conversation and message history with foreign keys ena
 ```
 conversations(id TEXT PK, title TEXT, created_at INT, updated_at INT)
 messages(id TEXT PK, conversation_id TEXT FK -> conversations ON DELETE CASCADE,
-         role TEXT, content TEXT, timestamp INT)
+         role TEXT, content TEXT, timestamp INT, model_name TEXT NULL)
 provider_settings(id INTEGER PK, active INT, provider_name TEXT, protocol TEXT, base_url TEXT, model TEXT, key_ref TEXT, stream_replies INT)
 app_preferences(id INTEGER PK, dark_mode INT)
 ```

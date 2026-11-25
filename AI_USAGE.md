@@ -16,6 +16,7 @@
 - Move startup retry, provider editing, and composer state to Bloc.
 - Implement offline conversation search, persisted light and dark themes, and saved provider switching. Verify the schema upgrade and key isolation.
 - Redesign the conversation list, chat, and provider settings with a custom palette and true-black dark mode.
+- Simplify the visual layout and persist the original model name with each assistant reply.
 
 ## Generated code
 

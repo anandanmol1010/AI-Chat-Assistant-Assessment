@@ -39,7 +39,13 @@ void main() {
       });
       final reply = await repo.reply(history).toList();
       expect(
-        reply.map((event) => event.getOrElse((_) => 'failure')).join(),
+        reply.map((event) => event.getRight().toNullable()?.modelName),
+        everyElement('example'),
+      );
+      expect(
+        reply
+            .map((event) => event.getRight().toNullable()?.text ?? 'failure')
+            .join(),
         'Héllo',
       );
     },
@@ -80,7 +86,7 @@ void main() {
           timestamp: DateTime.utc(2026),
         ),
       ]).toList();
-      expect(reply.single.getOrElse((_) => 'failure'), 'OK');
+      expect(reply.single.getRight().toNullable()?.text, 'OK');
     },
   );
 
@@ -96,7 +102,7 @@ void main() {
       );
     }, streaming: false);
     expect(
-      (await repo.reply(history).single).getOrElse((_) => 'failure'),
+      (await repo.reply(history).single).getRight().toNullable()?.text,
       'Done',
     );
   });

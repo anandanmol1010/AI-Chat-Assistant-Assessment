@@ -144,14 +144,14 @@ class _ChatScreenState extends State<ChatScreen> {
       itemBuilder: (context, index) {
         if (replying && index == 0) {
           return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6),
+            padding: const EdgeInsets.symmetric(vertical: 10),
             child: MessageBubble.streaming(state.partialReply),
           );
         }
         final message = state
             .messages[state.messages.length - 1 - index + (replying ? 1 : 0)];
         return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6),
+          padding: const EdgeInsets.symmetric(vertical: 10),
           child: MessageBubble(message: message),
         );
       },
@@ -165,7 +165,7 @@ class _ChatScreenState extends State<ChatScreen> {
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: colors.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: colors.outlineVariant),
         ),
         child: Padding(

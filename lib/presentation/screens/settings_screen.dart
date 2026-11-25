@@ -64,22 +64,13 @@ class SettingsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                 ],
-                FilledButton.icon(
+                FilledButton(
                   onPressed: saving
                       ? null
                       : () => context.read<SettingsBloc>().add(
                           const ProviderSaved(),
                         ),
-                  icon: saving
-                      ? SizedBox.square(
-                          dimension: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: colors.onSurfaceVariant,
-                          ),
-                        )
-                      : const Icon(Icons.check_rounded),
-                  label: Text(saving ? 'Saving provider' : 'Save provider'),
+                  child: Text(saving ? 'Saving provider' : 'Save provider'),
                 ),
               ],
             ),
@@ -97,8 +88,7 @@ class SettingsScreen extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
       children: [
         if (state.profiles.isNotEmpty) ...[
-          _SettingsPanel(
-            icon: Icons.layers_outlined,
+          _SettingsSection(
             title: 'Profiles',
             children: [
               DropdownButtonFormField<int>(
@@ -139,10 +129,9 @@ class SettingsScreen extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const Divider(height: 36),
         ],
-        _SettingsPanel(
-          icon: Icons.link_rounded,
+        _SettingsSection(
           title: 'Connection',
           children: [
             DropdownButtonFormField<ProviderProtocol>(
@@ -204,9 +193,8 @@ class SettingsScreen extends StatelessWidget {
               ),
           ],
         ),
-        const SizedBox(height: 16),
-        _SettingsPanel(
-          icon: Icons.tune_rounded,
+        const Divider(height: 36),
+        _SettingsSection(
           title: 'Response',
           children: [
             _field(
@@ -258,45 +246,37 @@ class SettingsScreen extends StatelessWidget {
   );
 }
 
-class _SettingsPanel extends StatelessWidget {
-  const _SettingsPanel({
-    required this.icon,
-    required this.title,
-    required this.children,
-  });
-
-  final IconData icon;
+class _SettingsSection extends StatelessWidget {
+  const _SettingsSection({required this.title, required this.children});
   final String title;
   final List<Widget> children;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colors.surfaceContainer,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colors.outlineVariant),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Icon(icon, color: colors.primary, size: 20),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(title, style: theme.textTheme.titleMedium),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            ...children,
-          ],
+    final line = UnderlineInputBorder(
+      borderSide: BorderSide(color: theme.colorScheme.outlineVariant),
+    );
+    return Theme(
+      data: theme.copyWith(
+        inputDecorationTheme: theme.inputDecorationTheme.copyWith(
+          filled: false,
+          contentPadding: const EdgeInsets.symmetric(vertical: 12),
+          border: line,
+          enabledBorder: line,
+          disabledBorder: line,
+          focusedBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
+          ),
         ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(title, style: theme.textTheme.titleMedium),
+          const SizedBox(height: 10),
+          ...children,
+        ],
       ),
     );
   }

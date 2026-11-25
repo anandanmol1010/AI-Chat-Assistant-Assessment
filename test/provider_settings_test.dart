@@ -144,6 +144,8 @@ void main() {
         options: OpenDatabaseOptions(
           version: 3,
           onCreate: (db, _) async {
+            await db.execute('CREATE TABLE messages (id TEXT PRIMARY KEY)');
+            await db.insert('messages', {'id': 'legacy-message'});
             await db.execute("""
             CREATE TABLE provider_settings (
               id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -175,6 +177,9 @@ void main() {
           result.getOrElse((_) => throw StateError('Load failed'));
       try {
         final migrated = requireConfig(await repository.load());
+        final oldMessage = (await db.query('messages')).single;
+        expect(oldMessage['id'], 'legacy-message');
+        expect(oldMessage['model_name'], isNull);
         expect(migrated?.name, 'Original Gemini');
         expect(migrated?.apiKey, 'legacy-fixture-key');
         expect(migrated?.streamReplies, isFalse);

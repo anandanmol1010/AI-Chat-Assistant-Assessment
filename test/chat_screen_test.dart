@@ -88,7 +88,9 @@ void main() {
     await tester.pump();
     expect(tester.widget<EditableText>(editable).controller.text, isEmpty);
     expect(find.text('Assistant is typing…'), findsOneWidget);
-    remote.events.add(const Right('**Done**'));
+    remote.events.add(
+      const Right((text: '**Done**', modelName: 'gemini-fixture')),
+    );
     await tester.pump();
     expect(find.text('**Done**'), findsOneWidget);
     expect(find.bySemanticsLabel('Waiting for provider'), findsOneWidget);
@@ -98,6 +100,7 @@ void main() {
       tester.widget<MarkdownBody>(find.byType(MarkdownBody)).data,
       '**Done**',
     );
+    expect(find.text('gemini-fixture'), findsOneWidget);
     expect(find.byType(LinearProgressIndicator), findsNothing);
     expect(tester.widget<IconButton>(send).onPressed, isNull);
     expect(tester.takeException(), isNull);
@@ -134,7 +137,8 @@ class _ConversationStore implements ConversationRepository {
 }
 
 class _Reply implements ChatRepository {
-  final events = StreamController<Either<Failure, String>>();
+  final events = StreamController<Either<Failure, ReplyDelta>>();
   @override
-  Stream<Either<Failure, String>> reply(List<Message> history) => events.stream;
+  Stream<Either<Failure, ReplyDelta>> reply(List<Message> history) =>
+      events.stream;
 }

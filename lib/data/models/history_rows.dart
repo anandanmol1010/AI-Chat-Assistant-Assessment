@@ -21,6 +21,7 @@ Message messageFromRow(Map<String, Object?> row) => Message(
   role: MessageRole.values.byName(row['role'] as String),
   content: row['content'] as String,
   timestamp: _fromEpoch(row['timestamp']),
+  modelName: row['model_name'] as String?,
 );
 
 Map<String, Object?> messageToRow(Message message) => {
@@ -29,6 +30,7 @@ Map<String, Object?> messageToRow(Message message) => {
   'role': message.role.name,
   'content': message.content,
   'timestamp': message.timestamp.microsecondsSinceEpoch,
+  'model_name': message.modelName,
 };
 
 DateTime _fromEpoch(Object? value) =>
