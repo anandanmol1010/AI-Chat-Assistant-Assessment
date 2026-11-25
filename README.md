@@ -100,6 +100,10 @@ flutter test
 
 Tests cover app launch, SQLite reopen persistence, duplicate inserts, cascading deletion, and the ConversationBloc create/open/delete flow. Additional tests cover provider settings, OpenAI-compatible and Gemini request formats, streaming, HTTP errors, and duplicate-free retry.
 
+### Physical Android verification
+
+The ARM64 debug APK was built, installed over USB, and launched on an RMX3085 running Android 13 on 26 November 2026. A local OpenAI-compatible HTTP fixture returned a rate limit on the first request and a streamed Markdown reply on retry. The phone displayed one copy of the prompt, reopened the saved transcript after an app restart with the fixture disconnected, kept a new prompt visible after a connection failure, and deleted the test conversation. Live OpenAI and Gemini credentials were outside this smoke test.
+
 ### Manual smoke test
 
 1. Configure one provider and send a multiline prompt that asks for a list and a code block. Watch the text stream in and confirm the final reply renders as Markdown.
