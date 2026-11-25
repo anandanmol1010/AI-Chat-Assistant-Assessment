@@ -10,7 +10,7 @@ Saved conversations stay available offline. If a reply fails, retry the saved pr
 
 - Create, open, and delete conversations
 - Chat screen with user and assistant bubbles, timestamps, multiline composer
-- Typing indicator, duplicate-request guard, empty-message guard
+- Typing and request progress indicators, duplicate-request guard, empty-message guard
 - Provider settings: name, base URL, API key, model (persisted)
 - Providers: OpenAI, Gemini, any OpenAI-compatible endpoint (OpenRouter, LM Studio, ...)
 - Full offline read access to saved conversations and messages
@@ -37,6 +37,8 @@ Open **Provider settings**, choose a protocol, enter the base URL and model ID, 
 | OpenRouter | `https://openrouter.ai/api/v1` | API key required |
 | LM Studio | `http://localhost:1234/v1` | Android emulator: use `http://10.0.2.2:1234/v1`. Leave the key blank for HTTP. |
 | Gemini | `https://generativelanguage.googleapis.com/v1beta` | API key required |
+
+For a keyless LM Studio server running on your computer, an Android phone connected over USB can reach it using `adb reverse tcp:1234 tcp:1234` and base URL `http://127.0.0.1:1234/v1`. Use the model ID shown by LM Studio. Other remote endpoints use HTTPS.
 
 ## Environment Variables
 
@@ -98,7 +100,7 @@ flutter analyze
 flutter test
 ```
 
-Tests cover app launch, SQLite reopen persistence, duplicate inserts, cascading deletion, and the ConversationBloc create/open/delete flow. Additional tests cover provider settings, OpenAI-compatible and Gemini request formats, streaming, HTTP errors, and duplicate-free retry.
+Tests cover app launch, SQLite reopen persistence, duplicate inserts, cascading deletion, and the ConversationBloc create/open/delete flow. Additional tests cover provider settings, OpenAI-compatible and Gemini request formats, streaming, processing feedback, HTTP and transport errors, and duplicate-free retry.
 
 ### Physical Android verification
 

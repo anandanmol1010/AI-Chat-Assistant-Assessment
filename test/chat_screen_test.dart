@@ -63,6 +63,7 @@ void main() {
     );
     expect(tester.widget<IconButton>(send).onPressed, isNull);
 
+    expect(find.bySemanticsLabel('Saving message'), findsOneWidget);
     store.pending.complete(const Left(StorageFailure()));
     await tester.pumpAndSettle();
     expect(
@@ -84,12 +85,14 @@ void main() {
     remote.events.add(const Right('**Done**'));
     await tester.pump();
     expect(find.text('**Done**'), findsOneWidget);
+    expect(find.bySemanticsLabel('Waiting for provider'), findsOneWidget);
     unawaited(remote.events.close());
     await tester.pumpAndSettle();
     expect(
       tester.widget<MarkdownBody>(find.byType(MarkdownBody)).data,
       '**Done**',
     );
+    expect(find.byType(LinearProgressIndicator), findsNothing);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
     unawaited(bloc.close());

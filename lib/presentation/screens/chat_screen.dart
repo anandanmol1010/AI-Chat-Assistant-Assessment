@@ -97,6 +97,12 @@ class _ChatScreenState extends State<ChatScreen> {
                         child: const Text('Retry'),
                       ),
                     ),
+                  if (state.busy)
+                    LinearProgressIndicator(
+                      semanticsLabel: state.phase == ChatPhase.saving
+                          ? 'Saving message'
+                          : 'Waiting for provider',
+                    ),
                   _composer(context, state, bloc),
                 ],
               ),
