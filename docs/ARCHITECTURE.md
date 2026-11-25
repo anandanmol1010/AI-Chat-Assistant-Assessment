@@ -25,7 +25,7 @@ presentation -> domain <- data
 |---|---|---|
 | `ConversationBloc` | `ConversationsRequested`, `ConversationCreated`, `ConversationOpened`, `ConversationDeleted` | Loading, empty, loaded, and error. A loaded state may include the resolved conversation for navigation. Events share a sequential queue so reads and writes complete in order. |
 | `ChatBloc` | `ChatOpened`, `MessageSent`, `ChatRetryRequested` | One snapshot carries saved messages, a phase, transient reply text, and an optional typed failure. A shared droppable event handler gates both send and retry. |
-| `SettingsBloc` | `SettingsRequested`, provider draft edits, `ProviderSaved` | Loading, loaded, and error. Validation happens before writes. A failed save keeps the draft in Bloc state. |
+| `SettingsBloc` | `SettingsRequested`, profile creation and selection, provider draft edits, `ProviderSaved` | Loading, loaded, and error. Validation happens before writes. A failed save keeps the draft in Bloc state. |
 
 An app-scoped ThemeBloc loads and saves the light or dark preference in SQLite. MaterialApp applies the selected theme across the conversation list, chat, and Settings without rebuilding the navigation stack.
 
@@ -42,7 +42,7 @@ Conversation search runs entirely in SQLite. It matches literal substrings in ti
 
 OpenAI and compatible servers use the same Chat Completions adapter. Gemini supplies a separate codec for request shape, roles, and response chunks. Both share Dio transport, server-sent event framing, and failure mapping. Redirects are disabled on provider requests. The request sends the current conversation transcript to the endpoint selected in Settings.
 
-SQLite enforces message ownership through foreign keys with cascading deletion. Message insertion, conversation recency, and the first-message title run in one transaction. The versioned schema upgrades provider settings while preserving history. API keys live in device secure storage. SQLite references the current key with an opaque ID.
+SQLite enforces message ownership through foreign keys with cascading deletion. Message insertion, conversation recency, and the first-message title run in one transaction. The versioned schema upgrades provider settings while preserving history. API keys live in device secure storage. SQLite references each profile key with an opaque ID. A partial unique index enforces a single active profile. Activation is transactional, and each reply reads the active profile at request start.
 
 Streaming keeps partial text in memory. Markdown renders on completed assistant messages and shows image alt text without remote image requests. The stored transcript is sent without context-window truncation. Provider-side context limits still apply.
 

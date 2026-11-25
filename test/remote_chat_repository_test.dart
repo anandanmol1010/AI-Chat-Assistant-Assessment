@@ -246,8 +246,4 @@ class _Settings implements SettingsRepository {
 
   @override
   Future<Either<Failure, ProviderConfig?>> load() async => Right(config);
-
-  @override
-  Future<Either<Failure, Unit>> save(ProviderConfig config) async =>
-      const Right(unit);
 }

@@ -32,6 +32,46 @@ class SettingsScreen extends StatelessWidget {
       children: [
         const DarkModeSwitch(),
         const SizedBox(height: 12),
+        if (state.profiles.isNotEmpty)
+          Row(
+            children: [
+              Expanded(
+                child: DropdownButtonFormField<int>(
+                  key: ValueKey(draft.profileId),
+                  isExpanded: true,
+                  initialValue: draft.profileId,
+                  hint: const Text('New provider profile'),
+                  decoration: const InputDecoration(
+                    labelText: 'Provider profiles',
+                  ),
+                  items: [
+                    for (final profile in state.profiles)
+                      DropdownMenuItem(
+                        value: profile.id,
+                        child: Text(
+                          profile.active
+                              ? '${profile.name} (active)'
+                              : profile.name,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                  ],
+                  onChanged: loading
+                      ? null
+                      : (id) {
+                          if (id != null) bloc.add(ProviderProfileSelected(id));
+                        },
+                ),
+              ),
+              const SizedBox(width: 8),
+              TextButton(
+                onPressed: loading || draft.profileId == null
+                    ? null
+                    : () => bloc.add(const ProviderProfileCreated()),
+                child: const Text('New profile'),
+              ),
+            ],
+          ),
         DropdownButtonFormField<ProviderProtocol>(
           key: ValueKey(draft.protocol),
           initialValue: draft.protocol,
@@ -131,7 +171,7 @@ class SettingsScreen extends StatelessWidget {
     String? hint,
     TextInputType? keyboard,
   }) => Padding(
-    key: ValueKey((draft.protocol, field)),
+    key: ValueKey((draft.profileId, draft.protocol, field)),
     padding: const EdgeInsets.only(top: 12),
     child: TextFormField(
       initialValue: value,

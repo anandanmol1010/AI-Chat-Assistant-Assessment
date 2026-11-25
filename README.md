@@ -15,7 +15,7 @@ Saved conversations stay available offline. If a reply fails, retry the saved pr
 - Providers: OpenAI, Gemini, any OpenAI-compatible endpoint (OpenRouter, LM Studio, ...)
 - Full offline read access to saved conversations and messages
 - Typed error handling: network, timeout, auth, rate limit, invalid response
-- Bonuses: streaming responses, Markdown rendering, offline search, and a dark mode preference saved on the device
+- Bonuses: streaming responses, Markdown rendering, offline search, persisted dark mode, and multiple saved provider profiles
 
 ## Setup
 
@@ -29,7 +29,7 @@ flutter pub get
 flutter run
 ```
 
-Open **Provider settings**, choose a protocol, enter the base URL and model ID, then save. If a compatible endpoint supports only full JSON responses, turn off **Stream replies**.
+Open **Provider settings**, choose a protocol, enter the base URL and model ID, then save. If a compatible endpoint supports only full JSON responses, turn off **Stream replies**. Select **New profile** to save another configuration. Selecting a saved profile activates it for subsequent chat requests.
 
 | Provider | Base URL | Notes |
 |---|---|---|
@@ -76,7 +76,7 @@ Details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Reasons behind choices: [
 |---|---|---|---|
 | `ConversationBloc` | list, create, delete, open conversations | `ConversationsRequested`, `ConversationCreated`, `ConversationOpened`, `ConversationDeleted` | `ConversationLoading`, `ConversationLoaded`, `ConversationEmpty`, `ConversationError` |
 | `ChatBloc` | load messages, send prompt, receive reply, errors | `ChatOpened`, `MessageSent`, `ChatRetryRequested` | `ChatState` with loading, ready, saving, replying, and history-error phases |
-| `SettingsBloc` | provider and app settings | `SettingsRequested`, provider draft edits, `ProviderSaved` | `SettingsLoading`, `SettingsLoaded`, `SettingsError` |
+| `SettingsBloc` | provider profiles and provider settings | `SettingsRequested`, profile selection, provider draft edits, `ProviderSaved` | `SettingsLoading`, `SettingsLoaded`, `SettingsError` |
 
 The feature Blocs call use cases for application operations. Startup retry, provider form edits, and composer availability also use Bloc events and state.
 
@@ -88,11 +88,11 @@ SQLite (`sqflite`) stores conversation and message history with foreign keys ena
 conversations(id TEXT PK, title TEXT, created_at INT, updated_at INT)
 messages(id TEXT PK, conversation_id TEXT FK -> conversations ON DELETE CASCADE,
          role TEXT, content TEXT, timestamp INT)
-provider_settings(id INTEGER PK, provider_name TEXT, protocol TEXT, base_url TEXT, model TEXT, key_ref TEXT, stream_replies INT)
+provider_settings(id INTEGER PK, active INT, provider_name TEXT, protocol TEXT, base_url TEXT, model TEXT, key_ref TEXT, stream_replies INT)
 app_preferences(id INTEGER PK, dark_mode INT)
 ```
 
-API keys live in `flutter_secure_storage`, referenced by an opaque ID. The app stores one active configuration.
+Each provider profile has its own secure-storage key reference. A SQLite constraint permits one active profile at a time. Earlier single-provider installs migrate their settings and key reference into the first profile.
 
 ## Testing
 
@@ -101,7 +101,7 @@ flutter analyze
 flutter test
 ```
 
-Tests cover app launch, SQLite reopen persistence, duplicate inserts, cascading deletion, and the ConversationBloc create/open/delete flow. Additional tests cover provider settings, OpenAI-compatible and Gemini request formats, streaming, processing feedback, HTTP and transport errors, and duplicate-free retry.
+Tests cover app launch, SQLite reopen persistence, duplicate inserts, cascading deletion, and the ConversationBloc create/open/delete flow. Additional tests cover provider settings, OpenAI-compatible and Gemini request formats, streaming, processing feedback, HTTP and transport errors, duplicate-free retry, offline search, theme persistence, and provider profile migration and switching.
 
 ### Physical Android verification
 

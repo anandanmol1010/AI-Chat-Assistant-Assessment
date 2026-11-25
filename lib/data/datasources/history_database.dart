@@ -9,7 +9,7 @@ Future<Database> openHistoryDatabase({
   return database.openDatabase(
     path ?? p.join(await database.getDatabasesPath(), 'chat_history.db'),
     options: OpenDatabaseOptions(
-      version: 4,
+      version: 5,
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -17,10 +17,13 @@ Future<Database> openHistoryDatabase({
         if (oldVersion < 4) await _createAppPreferences(db);
         if (oldVersion < 2) {
           await _createProviderTable(db);
-        } else if (oldVersion < 3) {
-          await db.execute(
-            'ALTER TABLE provider_settings ADD COLUMN stream_replies INTEGER NOT NULL DEFAULT 1',
-          );
+        } else {
+          if (oldVersion < 3) {
+            await db.execute(
+              'ALTER TABLE provider_settings ADD COLUMN stream_replies INTEGER NOT NULL DEFAULT 1',
+            );
+          }
+          if (oldVersion < 5) await _migrateProviderProfiles(db);
         }
       },
       onCreate: (db, version) async {
@@ -53,9 +56,11 @@ Future<Database> openHistoryDatabase({
   );
 }
 
-Future<void> _createProviderTable(Database db) => db.execute("""
+Future<void> _createProviderTable(Database db) async {
+  await db.execute("""
   CREATE TABLE provider_settings (
-    id INTEGER PRIMARY KEY CHECK (id = 1),
+    id INTEGER PRIMARY KEY,
+    active INTEGER NOT NULL CHECK (active IN (0, 1)),
     provider_name TEXT NOT NULL,
     protocol TEXT NOT NULL,
     base_url TEXT NOT NULL,
@@ -64,6 +69,23 @@ Future<void> _createProviderTable(Database db) => db.execute("""
     stream_replies INTEGER NOT NULL DEFAULT 1
   )
 """);
+  await db.execute(
+    'CREATE UNIQUE INDEX active_provider ON provider_settings(active) WHERE active = 1',
+  );
+}
+
+Future<void> _migrateProviderProfiles(Database db) async {
+  await db.execute(
+    'ALTER TABLE provider_settings RENAME TO legacy_provider_settings',
+  );
+  await _createProviderTable(db);
+  await db.execute("""
+    INSERT INTO provider_settings (id, active, provider_name, protocol, base_url, model, key_ref, stream_replies)
+    SELECT id, 1, provider_name, protocol, base_url, model, key_ref, stream_replies
+    FROM legacy_provider_settings
+  """);
+  await db.execute('DROP TABLE legacy_provider_settings');
+}
 
 Future<void> _createAppPreferences(Database db) => db.execute("""
   CREATE TABLE app_preferences (

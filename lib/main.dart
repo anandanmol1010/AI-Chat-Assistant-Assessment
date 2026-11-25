@@ -12,7 +12,6 @@ import 'domain/usecases/generate_reply.dart';
 import 'domain/usecases/save_message.dart';
 import 'presentation/blocs/chat_bloc.dart';
 import 'presentation/screens/chat_screen.dart';
-import 'domain/repositories/settings_repository.dart';
 import 'domain/usecases/provider_settings.dart';
 import 'presentation/blocs/settings_bloc.dart';
 import 'presentation/screens/settings_screen.dart';
@@ -29,7 +28,7 @@ void main() => runApp(const AiChatAssistantApp());
 
 typedef _Repositories = ({
   ConversationRepository history,
-  SettingsRepository settings,
+  LocalSettingsRepository settings,
   ThemePreferences theme,
 });
 
@@ -133,7 +132,7 @@ class _HistoryStartupState extends State<_HistoryStartup> {
             Widget settingsBuilder(BuildContext context) => BlocProvider(
               create: (_) => SettingsBloc(
                 load: loadProvider,
-                save: SaveProvider(repositories.settings),
+                profiles: ManageProviderProfiles(repositories.settings),
               )..add(const SettingsRequested()),
               child: const SettingsScreen(),
             );

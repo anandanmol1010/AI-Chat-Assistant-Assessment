@@ -20,7 +20,7 @@ class ProviderRow {
   final String? keyRef;
 
   Map<String, Object?> toMap() => {
-    'id': 1,
+    'active': 1,
     'provider_name': config.name,
     'protocol': config.protocol.name,
     'base_url': config.baseUrl,

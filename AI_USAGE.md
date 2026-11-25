@@ -14,6 +14,7 @@
 - Implement the remaining provider, persistence, chat, and bonus requirements. Verify each milestone and document the engineering trade-offs.
 - Recheck the implementation against the assessment and fix gaps in Gemini credential feedback and chat progress indicators.
 - Move startup retry, provider editing, and composer state to Bloc.
+- Implement offline conversation search, persisted light and dark themes, and saved provider switching. Verify the schema upgrade and key isolation.
 
 ## Generated code
 
@@ -28,7 +29,7 @@ No manually written Dart code was recorded during this implementation session. T
 - Keep conversation history in relational SQLite tables and store credential bytes in device secure storage.
 - Share one ChatBloc request gate across send and retry. Persist the prompt before requesting a reply and reuse that row when retrying.
 - Choose the API adapter by protocol independently of the editable display name. Allow a single JSON reply when streaming is unsuitable for the configured endpoint.
-- Use streaming and Markdown for the two assessment bonuses. Keep incomplete streamed replies out of persistent history.
+- Implement streaming, Markdown, offline search, persisted theme selection, and provider profiles. Keep incomplete streamed replies out of persistent history.
 
 ## Verification
 

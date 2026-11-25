@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:ai_chat_assistant/data/datasources/history_database.dart';
 import 'package:ai_chat_assistant/data/repositories/local_settings_repository.dart';
 import 'package:ai_chat_assistant/domain/entities/provider_config.dart';
@@ -5,6 +7,9 @@ import 'package:ai_chat_assistant/domain/usecases/provider_settings.dart';
 import 'package:ai_chat_assistant/presentation/blocs/settings_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fpdart/fpdart.dart';
+import 'package:ai_chat_assistant/core/errors/failure.dart';
+import 'package:path/path.dart' as p;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
@@ -30,7 +35,10 @@ void main() {
         model: 'gemini-test',
         apiKey: 'test-fixture-key',
       );
-      expect((await SaveProvider(repository)(original)).isRight(), isTrue);
+      expect(
+        (await ManageProviderProfiles(repository).save(original)).isRight(),
+        isTrue,
+      );
       final row = (await db.query('provider_settings')).single;
       expect(row.values, isNot(contains(original.apiKey)));
       expect(await vault.read(key: row['key_ref'] as String), original.apiKey);
@@ -48,7 +56,12 @@ void main() {
         model: 'local-model',
         apiKey: '',
       );
-      expect((await SaveProvider(repository)(local)).isRight(), isTrue);
+      expect(
+        (await ManageProviderProfiles(
+          repository,
+        ).save(local, id: row['id'] as int)).isRight(),
+        isTrue,
+      );
       expect(await vault.readAll(), isEmpty);
       expect((await db.query('provider_settings')).single['key_ref'], isNull);
     },
@@ -70,7 +83,7 @@ void main() {
       );
       final bloc = SettingsBloc(
         load: LoadProvider(repository),
-        save: SaveProvider(repository),
+        profiles: ManageProviderProfiles(repository),
       );
       addTearDown(bloc.close);
 
@@ -110,6 +123,100 @@ void main() {
       expect(config?.baseUrl, 'http://127.0.0.1:1234/v1');
       expect(config?.model, 'local-model');
       expect(config?.streamReplies, isFalse);
+    },
+  );
+
+  test(
+    'migrates the original profile and keeps each key when switching',
+    () async {
+      FlutterSecureStorage.setMockInitialValues({
+        'legacy-ref': 'legacy-fixture-key',
+      });
+      const vault = FlutterSecureStorage();
+      sqfliteFfiInit();
+      final directory = await Directory.systemTemp.createTemp(
+        'provider_profile_',
+      );
+      addTearDown(() => directory.delete(recursive: true));
+      final path = p.join(directory.path, 'history.sqlite');
+      final legacy = await databaseFactoryFfi.openDatabase(
+        path,
+        options: OpenDatabaseOptions(
+          version: 3,
+          onCreate: (db, _) async {
+            await db.execute("""
+            CREATE TABLE provider_settings (
+              id INTEGER PRIMARY KEY CHECK (id = 1),
+              provider_name TEXT NOT NULL, protocol TEXT NOT NULL,
+              base_url TEXT NOT NULL, model TEXT NOT NULL,
+              key_ref TEXT, stream_replies INTEGER NOT NULL
+            )
+          """);
+            await db.insert('provider_settings', {
+              'id': 1,
+              'provider_name': 'Original Gemini',
+              'protocol': 'gemini',
+              'base_url': 'https://example.test/v1beta',
+              'model': 'gemini-fixture',
+              'key_ref': 'legacy-ref',
+              'stream_replies': 0,
+            });
+          },
+        ),
+      );
+      await legacy.close();
+      final db = await openHistoryDatabase(
+        factory: databaseFactoryFfi,
+        path: path,
+      );
+      final repository = LocalSettingsRepository(db, vault);
+      final profiles = ManageProviderProfiles(repository);
+      ProviderConfig? requireConfig(Either<Failure, ProviderConfig?> result) =>
+          result.getOrElse((_) => throw StateError('Load failed'));
+      try {
+        final migrated = requireConfig(await repository.load());
+        expect(migrated?.name, 'Original Gemini');
+        expect(migrated?.apiKey, 'legacy-fixture-key');
+        expect(migrated?.streamReplies, isFalse);
+
+        const second = ProviderConfig(
+          protocol: ProviderProtocol.openAi,
+          name: 'Second provider',
+          baseUrl: 'https://example.test/v1',
+          model: 'openai-fixture',
+          apiKey: 'second-fixture-key',
+        );
+        expect((await profiles.save(second)).isRight(), isTrue);
+        final saved = (await profiles.list()).getOrElse(
+          (_) => throw StateError('List failed'),
+        );
+        expect(saved, hasLength(2));
+        expect(
+          saved.where((profile) => profile.active).single.name,
+          second.name,
+        );
+        expect(requireConfig(await repository.load())?.apiKey, second.apiKey);
+        expect((await profiles.activate(999)).isLeft(), isTrue);
+        expect(requireConfig(await repository.load())?.name, second.name);
+        expect((await profiles.activate(1)).isRight(), isTrue);
+      } finally {
+        await db.close();
+      }
+
+      final reopened = await openHistoryDatabase(
+        factory: databaseFactoryFfi,
+        path: path,
+      );
+      addTearDown(reopened.close);
+      final restored = LocalSettingsRepository(reopened, vault);
+      expect(
+        requireConfig(await restored.load())?.apiKey,
+        'legacy-fixture-key',
+      );
+      expect(
+        (await vault.readAll()).values,
+        unorderedEquals(['legacy-fixture-key', 'second-fixture-key']),
+      );
     },
   );
 
