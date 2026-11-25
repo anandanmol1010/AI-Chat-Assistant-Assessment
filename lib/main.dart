@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'data/repositories/local_settings_repository.dart';
+import 'data/repositories/sqlite_theme_preferences.dart';
+import 'domain/repositories/theme_preferences.dart';
+import 'presentation/blocs/theme_bloc.dart';
 import 'data/repositories/remote_chat_repository.dart';
 import 'domain/usecases/generate_reply.dart';
 import 'domain/usecases/save_message.dart';
@@ -27,6 +30,7 @@ void main() => runApp(const AiChatAssistantApp());
 typedef _Repositories = ({
   ConversationRepository history,
   SettingsRepository settings,
+  ThemePreferences theme,
 });
 
 Future<_Repositories> _openRepositories() async {
@@ -34,6 +38,7 @@ Future<_Repositories> _openRepositories() async {
   return (
     history: SqliteConversationRepository(HistoryLocalDataSource(db)),
     settings: LocalSettingsRepository(db, const FlutterSecureStorage()),
+    theme: SqliteThemePreferences(db),
   );
 }
 
@@ -64,13 +69,33 @@ class AiChatAssistantApp extends StatelessWidget {
   const AiChatAssistantApp({super.key});
 
   @override
-  Widget build(BuildContext context) => MaterialApp(
+  Widget build(BuildContext context) => BlocProvider(
+    create: (_) => _StartupBloc()..add(const _StartupRequested()),
+    child: BlocBuilder<_StartupBloc, AsyncSnapshot<_Repositories>>(
+      builder: (context, snapshot) {
+        final repositories = snapshot.data;
+        if (repositories == null) return _materialApp(false);
+        return BlocProvider(
+          create: (_) =>
+              ThemeBloc(repositories.theme)..add(const ThemeRequested()),
+          child: BlocBuilder<ThemeBloc, ThemeState>(
+            buildWhen: (previous, current) => previous.dark != current.dark,
+            builder: (context, theme) => _materialApp(theme.dark),
+          ),
+        );
+      },
+    ),
+  );
+
+  Widget _materialApp(bool dark) => MaterialApp(
     title: 'AI Chat Assistant',
     theme: ThemeData(colorSchemeSeed: const Color(0xFF206B54)),
-    home: BlocProvider(
-      create: (_) => _StartupBloc()..add(const _StartupRequested()),
-      child: const _HistoryStartup(),
+    darkTheme: ThemeData(
+      colorSchemeSeed: const Color(0xFF206B54),
+      brightness: Brightness.dark,
     ),
+    themeMode: dark ? ThemeMode.dark : ThemeMode.light,
+    home: const _HistoryStartup(),
   );
 }
 

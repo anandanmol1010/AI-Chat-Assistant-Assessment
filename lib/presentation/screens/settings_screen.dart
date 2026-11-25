@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/provider_config.dart';
 import '../blocs/settings_bloc.dart';
+import '../widgets/dark_mode_switch.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -29,6 +30,8 @@ class SettingsScreen extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
+        const DarkModeSwitch(),
+        const SizedBox(height: 12),
         DropdownButtonFormField<ProviderProtocol>(
           key: ValueKey(draft.protocol),
           initialValue: draft.protocol,

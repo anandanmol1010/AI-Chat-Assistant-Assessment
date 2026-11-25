@@ -15,7 +15,7 @@ Saved conversations stay available offline. If a reply fails, retry the saved pr
 - Providers: OpenAI, Gemini, any OpenAI-compatible endpoint (OpenRouter, LM Studio, ...)
 - Full offline read access to saved conversations and messages
 - Typed error handling: network, timeout, auth, rate limit, invalid response
-- Bonuses: streaming responses, Markdown rendering, and offline search across conversation titles and message text
+- Bonuses: streaming responses, Markdown rendering, offline search, and a dark mode preference saved on the device
 
 ## Setup
 
@@ -89,6 +89,7 @@ conversations(id TEXT PK, title TEXT, created_at INT, updated_at INT)
 messages(id TEXT PK, conversation_id TEXT FK -> conversations ON DELETE CASCADE,
          role TEXT, content TEXT, timestamp INT)
 provider_settings(id INTEGER PK, provider_name TEXT, protocol TEXT, base_url TEXT, model TEXT, key_ref TEXT, stream_replies INT)
+app_preferences(id INTEGER PK, dark_mode INT)
 ```
 
 API keys live in `flutter_secure_storage`, referenced by an opaque ID. The app stores one active configuration.

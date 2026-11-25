@@ -27,6 +27,8 @@ presentation -> domain <- data
 | `ChatBloc` | `ChatOpened`, `MessageSent`, `ChatRetryRequested` | One snapshot carries saved messages, a phase, transient reply text, and an optional typed failure. A shared droppable event handler gates both send and retry. |
 | `SettingsBloc` | `SettingsRequested`, provider draft edits, `ProviderSaved` | Loading, loaded, and error. Validation happens before writes. A failed save keeps the draft in Bloc state. |
 
+An app-scoped ThemeBloc loads and saves the light or dark preference in SQLite. MaterialApp applies the selected theme across the conversation list, chat, and Settings without rebuilding the navigation stack.
+
 ## Message flow
 
 1. Trim and validate the draft. Save the user message in SQLite. Clear the composer only after the write succeeds.
