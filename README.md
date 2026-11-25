@@ -2,7 +2,7 @@
 
 A Flutter chat app that talks to configurable AI providers (OpenAI, Gemini, any OpenAI-compatible endpoint) and keeps every conversation on the device.
 
-> Status: documentation and design only. The features, setup, and storage below describe the planned Flutter app.
+> Status: Android and iOS Flutter scaffold is available. The feature, architecture, and storage sections describe the planned implementation.
 
 ## Features
 
@@ -17,6 +17,8 @@ A Flutter chat app that talks to configurable AI providers (OpenAI, Gemini, any 
 
 ## Setup
 
+Use Flutter 3.44 or newer with an Android emulator or device, or macOS with Xcode for iOS.
+
 ```bash
 flutter --version
 git clone <repo-url>
@@ -25,7 +27,7 @@ flutter pub get
 flutter run
 ```
 
-Then open **Settings** inside the app and add a provider.
+Once provider settings are implemented, open **Settings** and add a provider.
 
 | Provider | Base URL | Notes |
 |---|---|---|
