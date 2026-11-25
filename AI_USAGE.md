@@ -15,6 +15,7 @@
 - Recheck the implementation against the assessment and fix gaps in Gemini credential feedback and chat progress indicators.
 - Move startup retry, provider editing, and composer state to Bloc.
 - Implement offline conversation search, persisted light and dark themes, and saved provider switching. Verify the schema upgrade and key isolation.
+- Redesign the conversation list, chat, and provider settings with a custom palette and true-black dark mode.
 
 ## Generated code
 

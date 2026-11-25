@@ -18,140 +18,215 @@ class SettingsScreen extends StatelessWidget {
             appBar: AppBar(title: const Text('Provider settings')),
             body: draft == null
                 ? const Center(child: CircularProgressIndicator())
-                : _form(context, state, draft),
+                : Align(
+                    alignment: Alignment.topCenter,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 640),
+                      child: _form(context, state, draft),
+                    ),
+                  ),
+            bottomNavigationBar: draft == null
+                ? null
+                : _saveBar(context, state),
           );
         },
       );
+
+  Widget _saveBar(BuildContext context, SettingsState state) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final saving = state is SettingsLoading;
+    return SafeArea(
+      top: false,
+      child: Align(
+        heightFactor: 1,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (state case SettingsError(:final message)) ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: colors.errorContainer,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      message,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colors.onErrorContainer,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                FilledButton.icon(
+                  onPressed: saving
+                      ? null
+                      : () => context.read<SettingsBloc>().add(
+                          const ProviderSaved(),
+                        ),
+                  icon: saving
+                      ? SizedBox.square(
+                          dimension: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: colors.onSurfaceVariant,
+                          ),
+                        )
+                      : const Icon(Icons.check_rounded),
+                  label: Text(saving ? 'Saving provider' : 'Save provider'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _form(BuildContext context, SettingsState state, SettingsDraft draft) {
     final bloc = context.read<SettingsBloc>();
     final loading = state is SettingsLoading;
     return ListView(
-      padding: const EdgeInsets.all(20),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
       children: [
-        if (state.profiles.isNotEmpty)
-          Row(
+        if (state.profiles.isNotEmpty) ...[
+          _SettingsPanel(
+            icon: Icons.layers_outlined,
+            title: 'Profiles',
             children: [
-              Expanded(
-                child: DropdownButtonFormField<int>(
-                  key: ValueKey(draft.profileId),
-                  isExpanded: true,
-                  initialValue: draft.profileId,
-                  hint: const Text('New provider profile'),
-                  decoration: const InputDecoration(
-                    labelText: 'Provider profiles',
-                  ),
-                  items: [
-                    for (final profile in state.profiles)
-                      DropdownMenuItem(
-                        value: profile.id,
-                        child: Text(
-                          profile.active
-                              ? '${profile.name} (active)'
-                              : profile.name,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                  ],
-                  onChanged: loading
-                      ? null
-                      : (id) {
-                          if (id != null) bloc.add(ProviderProfileSelected(id));
-                        },
+              DropdownButtonFormField<int>(
+                key: ValueKey(draft.profileId),
+                isExpanded: true,
+                initialValue: draft.profileId,
+                hint: const Text('New provider profile'),
+                decoration: const InputDecoration(
+                  labelText: 'Provider profiles',
                 ),
-              ),
-              const SizedBox(width: 8),
-              TextButton(
-                onPressed: loading || draft.profileId == null
+                items: [
+                  for (final profile in state.profiles)
+                    DropdownMenuItem(
+                      value: profile.id,
+                      child: Text(
+                        profile.active
+                            ? '${profile.name} (active)'
+                            : profile.name,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                ],
+                onChanged: loading
                     ? null
-                    : () => bloc.add(const ProviderProfileCreated()),
-                child: const Text('New profile'),
+                    : (id) {
+                        if (id != null) bloc.add(ProviderProfileSelected(id));
+                      },
+              ),
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: TextButton.icon(
+                  onPressed: loading || draft.profileId == null
+                      ? null
+                      : () => bloc.add(const ProviderProfileCreated()),
+                  icon: const Icon(Icons.add_rounded),
+                  label: const Text('New profile'),
+                ),
               ),
             ],
           ),
-        DropdownButtonFormField<ProviderProtocol>(
-          key: ValueKey(draft.protocol),
-          initialValue: draft.protocol,
-          decoration: const InputDecoration(labelText: 'Protocol'),
-          items: [
-            for (final protocol in ProviderProtocol.values)
-              DropdownMenuItem(value: protocol, child: Text(protocol.label)),
-          ],
-          onChanged: loading
-              ? null
-              : (protocol) {
-                  if (protocol != null) bloc.add(ProtocolChanged(protocol));
-                },
-        ),
-        _field(
-          draft,
-          ProviderField.name,
-          draft.name,
-          'Provider name',
-          bloc,
-          loading,
-        ),
-        _field(
-          draft,
-          ProviderField.url,
-          draft.baseUrl,
-          'API base URL',
-          bloc,
-          loading,
-          keyboard: TextInputType.url,
-        ),
-        _field(
-          draft,
-          ProviderField.model,
-          draft.model,
-          'Model name',
-          bloc,
-          loading,
-        ),
-        _field(
-          draft,
-          ProviderField.key,
-          draft.replacementKey,
-          'API key',
-          bloc,
-          loading,
-          obscure: true,
-          hint: draft.hasSavedKey
-              ? 'Leave blank to keep the key for the same URL'
-              : null,
-        ),
-        if (draft.hasSavedKey)
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: TextButton(
-              onPressed: loading
+          const SizedBox(height: 16),
+        ],
+        _SettingsPanel(
+          icon: Icons.link_rounded,
+          title: 'Connection',
+          children: [
+            DropdownButtonFormField<ProviderProtocol>(
+              key: ValueKey((draft.profileId, draft.protocol)),
+              isExpanded: true,
+              initialValue: draft.protocol,
+              decoration: const InputDecoration(labelText: 'Protocol'),
+              items: [
+                for (final protocol in ProviderProtocol.values)
+                  DropdownMenuItem(
+                    value: protocol,
+                    child: Text(protocol.label),
+                  ),
+              ],
+              onChanged: loading
                   ? null
-                  : () => bloc.add(const SavedKeyCleared()),
-              child: const Text('Clear saved key'),
+                  : (protocol) {
+                      if (protocol != null) bloc.add(ProtocolChanged(protocol));
+                    },
             ),
-          ),
-        SwitchListTile(
-          contentPadding: EdgeInsets.zero,
-          title: const Text('Stream replies'),
-          value: draft.streamReplies,
-          onChanged: loading
-              ? null
-              : (value) => bloc.add(StreamRepliesChanged(value)),
+            _field(
+              draft,
+              ProviderField.name,
+              draft.name,
+              'Provider name',
+              bloc,
+              loading,
+            ),
+            _field(
+              draft,
+              ProviderField.url,
+              draft.baseUrl,
+              'API base URL',
+              bloc,
+              loading,
+              keyboard: TextInputType.url,
+            ),
+            _field(
+              draft,
+              ProviderField.key,
+              draft.replacementKey,
+              'API key',
+              bloc,
+              loading,
+              obscure: true,
+              hint: draft.hasSavedKey
+                  ? 'Leave blank to keep the saved key'
+                  : null,
+            ),
+            if (draft.hasSavedKey)
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: TextButton(
+                  onPressed: loading
+                      ? null
+                      : () => bloc.add(const SavedKeyCleared()),
+                  child: const Text('Clear saved key'),
+                ),
+              ),
+          ],
         ),
-        if (state case SettingsError(:final message))
-          Padding(
-            padding: const EdgeInsets.only(top: 16),
-            child: Text(
-              message,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
+        const SizedBox(height: 16),
+        _SettingsPanel(
+          icon: Icons.tune_rounded,
+          title: 'Response',
+          children: [
+            _field(
+              draft,
+              ProviderField.model,
+              draft.model,
+              'Model name',
+              bloc,
+              loading,
             ),
-          ),
-        const SizedBox(height: 24),
-        if (loading) const LinearProgressIndicator(),
-        const SizedBox(height: 8),
-        FilledButton(
-          onPressed: loading ? null : () => bloc.add(const ProviderSaved()),
-          child: const Text('Save provider'),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Stream replies'),
+              subtitle: const Text('Show text as the provider generates it.'),
+              value: draft.streamReplies,
+              onChanged: loading
+                  ? null
+                  : (value) => bloc.add(StreamRepliesChanged(value)),
+            ),
+          ],
         ),
       ],
     );
@@ -181,4 +256,48 @@ class SettingsScreen extends StatelessWidget {
       keyboardType: keyboard,
     ),
   );
+}
+
+class _SettingsPanel extends StatelessWidget {
+  const _SettingsPanel({
+    required this.icon,
+    required this.title,
+    required this.children,
+  });
+
+  final IconData icon;
+  final String title;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.surfaceContainer,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colors.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: colors.primary, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(title, style: theme.textTheme.titleMedium),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ...children,
+          ],
+        ),
+      ),
+    );
+  }
 }

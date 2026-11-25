@@ -23,6 +23,7 @@ import 'domain/repositories/conversation_repository.dart';
 import 'domain/usecases/conversations.dart';
 import 'presentation/blocs/conversation_bloc.dart';
 import 'presentation/screens/conversations_screen.dart';
+import 'presentation/theme/app_theme.dart';
 
 void main() => runApp(const AiChatAssistantApp());
 
@@ -88,11 +89,9 @@ class AiChatAssistantApp extends StatelessWidget {
 
   Widget _materialApp(bool dark) => MaterialApp(
     title: 'AI Chat Assistant',
-    theme: ThemeData(colorSchemeSeed: const Color(0xFF206B54)),
-    darkTheme: ThemeData(
-      colorSchemeSeed: const Color(0xFF206B54),
-      brightness: Brightness.dark,
-    ),
+    debugShowCheckedModeBanner: false,
+    theme: AppTheme.light,
+    darkTheme: AppTheme.dark,
     themeMode: dark ? ThemeMode.dark : ThemeMode.light,
     home: const _HistoryStartup(),
   );

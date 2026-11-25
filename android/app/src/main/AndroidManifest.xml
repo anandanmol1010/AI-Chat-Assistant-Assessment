@@ -3,7 +3,7 @@
     <application
         android:networkSecurityConfig="@xml/network_security_config"
         android:allowBackup="false"
-        android:label="ai_chat_assistant"
+        android:label="AI Chat Assistant"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

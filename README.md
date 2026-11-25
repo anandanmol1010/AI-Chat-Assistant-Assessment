@@ -4,6 +4,10 @@ A Flutter chat app that talks to configurable AI providers (OpenAI, Gemini, any 
 
 > Status: The app implements offline conversation history, configurable providers, and AI chat with streaming and Markdown.
 
+## Interface
+
+The conversation list, chat, and settings share a custom cobalt palette. Dark mode uses a true-black screen background and separate surfaces for cards, messages, and inputs. Provider settings are grouped by profile, connection, and response.
+
 ## Features
 
 Saved conversations stay available offline. If a reply fails, retry the saved prompt directly from the chat.

@@ -10,6 +10,7 @@ import 'package:ai_chat_assistant/domain/usecases/generate_reply.dart';
 import 'package:ai_chat_assistant/domain/usecases/save_message.dart';
 import 'package:ai_chat_assistant/presentation/blocs/chat_bloc.dart';
 import 'package:ai_chat_assistant/presentation/screens/chat_screen.dart';
+import 'package:ai_chat_assistant/presentation/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
@@ -37,6 +38,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        theme: AppTheme.dark,
         home: BlocProvider.value(
           value: bloc,
           child: ChatScreen(
