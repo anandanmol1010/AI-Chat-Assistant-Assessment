@@ -101,6 +101,53 @@ void main() {
     );
   });
 
+  test('Gemini distinguishes an invalid key from a generic HTTP 400', () async {
+    for (final streaming in [true, false]) {
+      for (final (reason, matcher) in [
+        ('API_KEY_INVALID', isA<AuthFailure>()),
+        ('INVALID_MODEL', isA<ConfigFailure>()),
+      ]) {
+        final repo = _repository(
+          ProviderProtocol.gemini,
+          (_, _) => ResponseBody.fromString(
+            jsonEncode({
+              'error': {
+                'details': [
+                  {'reason': reason},
+                ],
+              },
+            }),
+            400,
+            headers: {
+              'content-type': ['application/json'],
+            },
+          ),
+          streaming: streaming,
+        );
+        final item = await repo.reply(history).single;
+        expect(item.fold((failure) => failure, (_) => null), matcher);
+      }
+    }
+  });
+
+  test(
+    'maps transport failures and timeouts without losing the failure type',
+    () async {
+      for (final (type, matcher) in [
+        (DioExceptionType.connectionError, isA<NetworkFailure>()),
+        (DioExceptionType.receiveTimeout, isA<TimeoutFailure>()),
+      ]) {
+        final repo = _repository(
+          ProviderProtocol.openAi,
+          (options, _) =>
+              throw DioException(requestOptions: options, type: type),
+        );
+        final item = await repo.reply(history).single;
+        expect(item.fold((failure) => failure, (_) => null), matcher);
+      }
+    },
+  );
+
   test('maps auth, rate limit, malformed data and truncated streams', () async {
     for (final (code, matcher) in [
       (401, isA<AuthFailure>()),

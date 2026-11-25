@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart';
@@ -50,9 +51,19 @@ class RemoteChatRepository implements ChatRepository {
               ? ResponseType.stream
               : ResponseType.json,
           followRedirects: false,
+          receiveDataWhenStatusError: false,
+          validateStatus: (status) =>
+              status != null &&
+              ((status >= 200 && status < 300) ||
+                  (status == 400 &&
+                      config.protocol == ProviderProtocol.gemini)),
         ),
       );
       final body = response.data;
+      if (response.statusCode == 400) {
+        yield Left(await _geminiBadRequest(body));
+        return;
+      }
       if (body is ResponseBody) {
         var hasText = false;
         await for (final data in sseData(body.stream)) {
@@ -97,6 +108,33 @@ class RemoteChatRepository implements ChatRepository {
     } on StateError {
       yield const Left(InvalidResponseFailure());
     }
+  }
+
+  Future<Failure> _geminiBadRequest(Object? body) async {
+    const rejected = ConfigFailure(
+      'The provider rejected this request. Check the API key, URL, and model.',
+    );
+    try {
+      if (body is ResponseBody) {
+        final bytes = BytesBuilder(copy: false);
+        await for (final chunk in body.stream) {
+          if (bytes.length + chunk.length > 16 * 1024) return rejected;
+          bytes.add(chunk);
+        }
+        body = utf8.decode(bytes.takeBytes());
+      }
+      final error = body is String ? jsonDecode(body) : body;
+      if (error case {'error': {'details': final List<dynamic> details}}) {
+        for (final detail in details) {
+          if (detail case {'reason': 'API_KEY_INVALID'}) {
+            return const AuthFailure();
+          }
+        }
+      }
+    } on FormatException {
+      return rejected;
+    }
+    return rejected;
   }
 
   Failure _mapDioError(DioException error) {
