@@ -2,9 +2,11 @@
 
 A Flutter chat app that talks to configurable AI providers (OpenAI, Gemini, any OpenAI-compatible endpoint) and keeps every conversation on the device.
 
-> Status: The Android and iOS scaffold and SQLite history layer are implemented. The app shell is available. Chat features and provider settings are planned.
+> Status: The Android and iOS app can create, open, list, and delete local conversations through ConversationBloc. Message sending and provider settings are planned.
 
 ## Features
+
+Available now: offline conversation management and a read-only history view. Remaining items below are planned.
 
 - Create, open, and delete conversations
 - Chat screen with user and assistant bubbles, timestamps, multiline composer
@@ -95,7 +97,7 @@ API keys are **not** in SQLite. They live in `flutter_secure_storage`, keyed by 
 flutter test
 ```
 
-Tests cover app launch, SQLite reopen persistence, duplicate inserts, and cascading deletion. Bloc events and provider error mapping are planned.
+Tests cover app launch, SQLite reopen persistence, duplicate inserts, cascading deletion, and the ConversationBloc create/open/delete flow. ChatBloc, SettingsBloc, and provider error tests are planned.
 
 ## AI Usage
 

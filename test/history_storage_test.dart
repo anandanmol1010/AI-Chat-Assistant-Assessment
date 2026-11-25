@@ -4,6 +4,8 @@ import 'package:ai_chat_assistant/data/datasources/history_database.dart';
 import 'package:ai_chat_assistant/data/datasources/history_local_data_source.dart';
 import 'package:ai_chat_assistant/data/repositories/sqlite_conversation_repository.dart';
 import 'package:ai_chat_assistant/domain/entities/message.dart';
+import 'package:ai_chat_assistant/domain/usecases/conversations.dart';
+import 'package:ai_chat_assistant/presentation/blocs/conversation_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -63,4 +65,46 @@ void main() {
       expect((await restored.append(userMessage)).isLeft(), isTrue);
     },
   );
+
+  test('ConversationBloc creates, opens, and deletes SQLite chats', () async {
+    sqfliteFfiInit();
+    final db = await openHistoryDatabase(
+      factory: databaseFactoryFfi,
+      path: inMemoryDatabasePath,
+    );
+    addTearDown(db.close);
+    final repository = SqliteConversationRepository(HistoryLocalDataSource(db));
+    final bloc = ConversationBloc(
+      list: GetConversations(repository),
+      create: CreateConversation(repository),
+      find: GetConversation(repository),
+      delete: DeleteConversation(repository),
+    );
+    addTearDown(bloc.close);
+
+    Future<ConversationState> dispatch(ConversationEvent event) {
+      final state = bloc.stream.firstWhere(
+        (state) => state is! ConversationLoading,
+      );
+      bloc.add(event);
+      return state;
+    }
+
+    expect(
+      await dispatch(const ConversationsRequested()),
+      isA<ConversationEmpty>(),
+    );
+    final created =
+        await dispatch(const ConversationCreated()) as ConversationLoaded;
+    final chat = created.conversations.single;
+    expect(created.opened?.id, chat.id);
+
+    final opened =
+        await dispatch(ConversationOpened(chat.id)) as ConversationLoaded;
+    expect(opened.opened?.id, chat.id);
+    expect(
+      await dispatch(ConversationDeleted(chat.id)),
+      isA<ConversationEmpty>(),
+    );
+  });
 }

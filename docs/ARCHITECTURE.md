@@ -1,6 +1,6 @@
 # Architecture
 
-Conversation and message persistence are implemented. The Bloc and provider flows below describe the planned implementation.
+SQLite history and ConversationBloc are implemented. ChatBloc, SettingsBloc, and provider integration describe planned implementation.
 
 ## Layers and dependency rule
 
@@ -88,7 +88,7 @@ Events: `ConversationsRequested`, `ConversationCreated`, `ConversationOpened(id)
 
 States: `ConversationLoading`, `ConversationLoaded(list)`, `ConversationEmpty`, `ConversationError`
 
-Title: starts as "New chat", auto-set from the first user message (trimmed).
+Conversation events share a sequential queue to preserve the order of reads and mutations. The history screen handles navigation when the Bloc returns a selected conversation. SQLite titles start as "New chat" and take the first eight words of the first saved user message.
 
 ### SettingsBloc
 
