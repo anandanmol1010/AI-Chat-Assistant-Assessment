@@ -162,7 +162,15 @@ class _HistoryStartupState extends State<_HistoryStartup> {
             );
           }
           return Scaffold(
-            appBar: AppBar(title: const Text('AI Chat Assistant')),
+            appBar: AppBar(
+              titleSpacing: 20,
+              title: Text(
+                'Conversations',
+                style: Theme.of(context).textTheme.headlineMedium,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
             body: Center(
               child: snapshot.hasError
                   ? Column(

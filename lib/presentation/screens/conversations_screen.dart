@@ -42,7 +42,12 @@ class ConversationsScreen extends StatelessWidget {
       return Scaffold(
         appBar: AppBar(
           titleSpacing: 20,
-          title: const Text('AI Chat Assistant'),
+          title: Text(
+            'Conversations',
+            style: theme.textTheme.headlineMedium,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
           actions: [
             const ThemeToggleButton(),
             IconButton(
@@ -55,6 +60,13 @@ class ConversationsScreen extends StatelessWidget {
             const SizedBox(width: 8),
           ],
         ),
+        floatingActionButton: canCreate
+            ? FloatingActionButton.extended(
+                onPressed: () => bloc.add(const ConversationCreated()),
+                icon: const Icon(Icons.add_rounded),
+                label: const Text('New chat'),
+              )
+            : null,
         body: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 720),
@@ -62,27 +74,7 @@ class ConversationsScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 14),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Conversations',
-                          style: theme.textTheme.headlineMedium,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      FilledButton.tonal(
-                        onPressed: canCreate
-                            ? () => bloc.add(const ConversationCreated())
-                            : null,
-                        child: const Text('New chat'),
-                      ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
                   child: TextField(
                     onChanged: (query) =>
                         bloc.add(ConversationSearchChanged(query)),
@@ -122,7 +114,7 @@ class ConversationsScreen extends StatelessWidget {
                       ListView.separated(
                         keyboardDismissBehavior:
                             ScrollViewKeyboardDismissBehavior.onDrag,
-                        padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+                        padding: const EdgeInsets.fromLTRB(20, 4, 20, 88),
                         itemCount: conversations.length,
                         separatorBuilder: (context, index) =>
                             const Divider(height: 1),

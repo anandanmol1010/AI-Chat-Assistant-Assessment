@@ -6,7 +6,7 @@ A Flutter chat app that talks to configurable AI providers (OpenAI, Gemini, any 
 
 ## Interface
 
-The app uses a warm light palette, restrained teal accents, and a true-black dark background. Conversation rows use dividers. Assistant replies sit directly on the chat canvas. Provider settings are grouped by profile, connection, and response.
+The app uses a warm light palette, restrained teal accents, and a true-black dark background. Conversation rows use dividers, with a floating **New chat** action. Assistant replies sit directly on the chat canvas. Provider settings are grouped by profile, connection, and response.
 
 ## Features
 
