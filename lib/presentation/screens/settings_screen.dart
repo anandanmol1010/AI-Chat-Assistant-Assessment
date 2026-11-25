@@ -19,6 +19,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   ProviderProtocol _protocol = ProviderProtocol.openAi;
   String _savedKey = '';
   String? _savedUrl;
+  bool _streamReplies = true;
 
   @override
   void initState() {
@@ -52,6 +53,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _model.text = config.model;
           _savedKey = config.apiKey;
           _savedUrl = config.baseUrl;
+          _streamReplies = config.streamReplies;
         }
       }
     },
@@ -109,6 +111,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: const Text('Clear saved key'),
                 ),
               ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Stream replies'),
+              value: _streamReplies,
+              onChanged: loading
+                  ? null
+                  : (value) => setState(() => _streamReplies = value),
+            ),
             if (state case SettingsError(:final message))
               Padding(
                 padding: const EdgeInsets.only(top: 16),
@@ -156,6 +166,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ProviderSaved(
         ProviderConfig(
           protocol: _protocol,
+          streamReplies: _streamReplies,
           name: _name.text.trim(),
           baseUrl: url,
           model: _model.text.trim(),

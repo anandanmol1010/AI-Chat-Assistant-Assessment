@@ -2,18 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/conversation.dart';
-import '../../domain/usecases/conversations.dart';
 import '../blocs/conversation_bloc.dart';
-import 'stored_chat_screen.dart';
 
 class ConversationsScreen extends StatelessWidget {
   const ConversationsScreen({
-    required this.getMessages,
+    required this.chatBuilder,
     required this.settingsBuilder,
     super.key,
   });
 
-  final GetMessages getMessages;
+  final Widget Function(Conversation) chatBuilder;
   final WidgetBuilder settingsBuilder;
 
   @override
@@ -25,12 +23,7 @@ class ConversationsScreen extends StatelessWidget {
             ModalRoute.isCurrentOf(context) == true) {
           final bloc = context.read<ConversationBloc>();
           await Navigator.of(context).push<void>(
-            MaterialPageRoute(
-              builder: (_) => StoredChatScreen(
-                conversation: state.opened!,
-                getMessages: getMessages,
-              ),
-            ),
+            MaterialPageRoute(builder: (_) => chatBuilder(state.opened!)),
           );
           if (!bloc.isClosed) bloc.add(const ConversationsRequested());
         }

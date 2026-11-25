@@ -1,7 +1,13 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'data/repositories/local_settings_repository.dart';
+import 'data/repositories/remote_chat_repository.dart';
+import 'domain/usecases/generate_reply.dart';
+import 'domain/usecases/save_message.dart';
+import 'presentation/blocs/chat_bloc.dart';
+import 'presentation/screens/chat_screen.dart';
 import 'domain/repositories/settings_repository.dart';
 import 'domain/usecases/provider_settings.dart';
 import 'presentation/blocs/settings_bloc.dart';
@@ -50,6 +56,19 @@ class _HistoryStartup extends StatefulWidget {
 
 class _HistoryStartupState extends State<_HistoryStartup> {
   late var _history = _openRepositories();
+  final _dio = Dio(
+    BaseOptions(
+      connectTimeout: const Duration(seconds: 15),
+      sendTimeout: const Duration(seconds: 15),
+      receiveTimeout: const Duration(seconds: 45),
+    ),
+  );
+
+  @override
+  void dispose() {
+    _dio.close(force: true);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) => FutureBuilder<_Repositories>(
@@ -59,6 +78,14 @@ class _HistoryStartupState extends State<_HistoryStartup> {
       if (snapshot.connectionState == ConnectionState.done &&
           repositories != null) {
         final repository = repositories.history;
+        final loadProvider = LoadProvider(repositories.settings);
+        Widget settingsBuilder(BuildContext context) => BlocProvider(
+          create: (_) => SettingsBloc(
+            load: loadProvider,
+            save: SaveProvider(repositories.settings),
+          ),
+          child: const SettingsScreen(),
+        );
         return BlocProvider(
           create: (_) => ConversationBloc(
             list: GetConversations(repository),
@@ -67,13 +94,20 @@ class _HistoryStartupState extends State<_HistoryStartup> {
             delete: DeleteConversation(repository),
           )..add(const ConversationsRequested()),
           child: ConversationsScreen(
-            getMessages: GetMessages(repository),
-            settingsBuilder: (_) => BlocProvider(
-              create: (_) => SettingsBloc(
-                load: LoadProvider(repositories.settings),
-                save: SaveProvider(repositories.settings),
+            settingsBuilder: settingsBuilder,
+            chatBuilder: (conversation) => BlocProvider(
+              create: (_) => ChatBloc(
+                conversationId: conversation.id,
+                getMessages: GetMessages(repository),
+                saveMessage: SaveMessage(repository),
+                generateReply: GenerateReply(
+                  RemoteChatRepository(_dio, loadProvider),
+                ),
+              )..add(const ChatOpened()),
+              child: ChatScreen(
+                conversation: conversation,
+                settingsBuilder: settingsBuilder,
               ),
-              child: const SettingsScreen(),
             ),
           ),
         );

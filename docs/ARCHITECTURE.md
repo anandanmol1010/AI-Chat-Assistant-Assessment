@@ -1,6 +1,6 @@
 # Architecture
 
-SQLite history, ConversationBloc, and SettingsBloc are implemented. ChatBloc and provider request handling describe planned implementation.
+The app implements SQLite history, provider settings, and a streaming chat flow through three Blocs.
 
 ## Layers and dependency rule
 

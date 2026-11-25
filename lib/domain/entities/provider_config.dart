@@ -15,6 +15,7 @@ class ProviderConfig {
     required this.baseUrl,
     required this.model,
     required this.apiKey,
+    this.streamReplies = true,
   });
 
   final ProviderProtocol protocol;
@@ -22,6 +23,7 @@ class ProviderConfig {
   final String baseUrl;
   final String model;
   final String apiKey;
+  final bool streamReplies;
 
   String? get validationError {
     if (name.isEmpty || model.isEmpty) {

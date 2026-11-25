@@ -11,6 +11,7 @@ class ProviderRow {
           baseUrl: map['base_url'] as String,
           model: map['model'] as String,
           apiKey: apiKey,
+          streamReplies: map['stream_replies'] == 1,
         ),
         map['key_ref'] as String?,
       );
@@ -25,5 +26,6 @@ class ProviderRow {
     'base_url': config.baseUrl,
     'model': config.model,
     'key_ref': keyRef,
+    'stream_replies': config.streamReplies ? 1 : 0,
   };
 }

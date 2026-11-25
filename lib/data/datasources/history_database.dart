@@ -9,12 +9,18 @@ Future<Database> openHistoryDatabase({
   return database.openDatabase(
     path ?? p.join(await database.getDatabasesPath(), 'chat_history.db'),
     options: OpenDatabaseOptions(
-      version: 2,
+      version: 3,
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
       onUpgrade: (db, oldVersion, _) async {
-        if (oldVersion < 2) await _createProviderTable(db);
+        if (oldVersion < 2) {
+          await _createProviderTable(db);
+        } else if (oldVersion < 3) {
+          await db.execute(
+            'ALTER TABLE provider_settings ADD COLUMN stream_replies INTEGER NOT NULL DEFAULT 1',
+          );
+        }
       },
       onCreate: (db, version) async {
         await _createProviderTable(db);
@@ -52,6 +58,7 @@ Future<void> _createProviderTable(Database db) => db.execute("""
     protocol TEXT NOT NULL,
     base_url TEXT NOT NULL,
     model TEXT NOT NULL,
-    key_ref TEXT
+    key_ref TEXT,
+    stream_replies INTEGER NOT NULL DEFAULT 1
   )
 """);

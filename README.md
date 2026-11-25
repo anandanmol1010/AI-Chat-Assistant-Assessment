@@ -2,11 +2,11 @@
 
 A Flutter chat app that talks to configurable AI providers (OpenAI, Gemini, any OpenAI-compatible endpoint) and keeps every conversation on the device.
 
-> Status: The Android and iOS app can create, open, list, and delete local conversations through ConversationBloc. Provider configuration is available. Message sending is planned.
+> Status: The app implements offline conversation history, configurable providers, and AI chat with streaming and Markdown.
 
 ## Features
 
-Available now: offline conversation management and a read-only history view. Remaining items below are planned.
+Saved conversations stay available offline. If a reply fails, retry the saved prompt directly from the chat.
 
 - Create, open, and delete conversations
 - Chat screen with user and assistant bubbles, timestamps, multiline composer
@@ -73,7 +73,7 @@ Details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Reasons behind choices: [
 | Bloc | Responsibility | Key events | States |
 |---|---|---|---|
 | `ConversationBloc` | list, create, delete, open conversations | `ConversationsRequested`, `ConversationCreated`, `ConversationOpened`, `ConversationDeleted` | `ConversationLoading`, `ConversationLoaded`, `ConversationEmpty`, `ConversationError` |
-| `ChatBloc` | load messages, send prompt, receive reply, errors | `ChatOpened`, `MessageSent`, `ChatRetryRequested` | `ChatInitial`, `ChatLoading`, `ChatSuccess`, `ChatError` |
+| `ChatBloc` | load messages, send prompt, receive reply, errors | `ChatOpened`, `MessageSent`, `ChatRetryRequested` | `ChatState` with loading, ready, saving, replying, and history-error phases |
 | `SettingsBloc` | provider and app settings | `SettingsRequested`, `ProviderSaved` | `SettingsLoading`, `SettingsLoaded`, `SettingsError` |
 
 Blocs depend only on use cases. They never touch HTTP, SQLite, or storage directly.
@@ -86,7 +86,7 @@ SQLite (`sqflite`) stores conversation and message history with foreign keys ena
 conversations(id TEXT PK, title TEXT, created_at INT, updated_at INT)
 messages(id TEXT PK, conversation_id TEXT FK -> conversations ON DELETE CASCADE,
          role TEXT, content TEXT, timestamp INT)
-provider_settings(id INTEGER PK, provider_name TEXT, protocol TEXT, base_url TEXT, model TEXT, key_ref TEXT)
+provider_settings(id INTEGER PK, provider_name TEXT, protocol TEXT, base_url TEXT, model TEXT, key_ref TEXT, stream_replies INT)
 ```
 
 API keys are **not** in SQLite. They live in `flutter_secure_storage`, referenced by an opaque ID. The app stores one active configuration.
@@ -97,7 +97,7 @@ API keys are **not** in SQLite. They live in `flutter_secure_storage`, reference
 flutter test
 ```
 
-Tests cover app launch, SQLite reopen persistence, duplicate inserts, cascading deletion, and the ConversationBloc create/open/delete flow. ChatBloc, SettingsBloc, and provider error tests are planned.
+Tests cover app launch, SQLite reopen persistence, duplicate inserts, cascading deletion, and the ConversationBloc create/open/delete flow. Additional tests cover provider settings, OpenAI-compatible and Gemini request formats, streaming, HTTP errors, and duplicate-free retry.
 
 ## AI Usage
 
