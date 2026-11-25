@@ -50,6 +50,10 @@ class ProviderConfig {
         (protocol != ProviderProtocol.compatible || apiKey.isNotEmpty)) {
       return 'Use HTTPS for credentials. HTTP is available for keyless compatible endpoints.';
     }
+    if (uri.scheme == 'http' &&
+        !{'localhost', '127.0.0.1', '10.0.2.2'}.contains(uri.host)) {
+      return 'Use HTTPS for remote hosts. HTTP is limited to local development hosts.';
+    }
     return null;
   }
 }
